@@ -1,0 +1,17 @@
+[project]
+name = "tx88"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = "==3.13.*"
+dependencies = [
+    "python-telegram-bot",
+    "pydantic",
+    "aiohttp",
+    "pyjwt[crypto]==2.0.1",
+    "requests",
+    "fastapi>=0.95",
+    "uvicorn[standard]>=0.22",
+    "pytest",
+    "aioresponses",
+    "pytest-asyncio",
+]
