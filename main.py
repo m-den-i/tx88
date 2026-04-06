@@ -30,6 +30,7 @@ async def retrieve_account_transactions(requests: ClientSession, account_uid: st
     now = datetime.now(timezone.utc)
     query = {
         "date_from": (now - timedelta(days=last_days)).date().isoformat(),
+        "transaction_status": "HOLD",
     }
     continuation_key = None
     ind = -1
@@ -55,6 +56,7 @@ async def retrieve_account_transactions(requests: ClientSession, account_uid: st
         else:
             print(f"Error response {r.status}:", (await r.text()))
             return
+
 
 async def create_session(requests: ClientSession, base_headers: dict):
     # Requesting application details
@@ -100,7 +102,7 @@ async def create_session(requests: ClientSession, base_headers: dict):
     r = await requests.post(f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=base_headers)
     if r.status == 200:
         session = await r.json()
-        with open("session_s.json", "wt") as f:
+        with open("mbank_session_last.json", "wt") as f:
             json.dump(session, f, indent=4)
         print("New user session has been created:")
         pprint(session)
@@ -110,7 +112,7 @@ async def create_session(requests: ClientSession, base_headers: dict):
 
 
 async def main():
-    settings = await Settings.load(SANTANDER_SESSION_UUID)
+    settings = await Settings.load(MBANK_SESSION_UUID)
     base_headers = {"Authorization": f"Bearer {build_jwt_token(settings)}"}
 
     async with aiohttp.ClientSession() as requests:

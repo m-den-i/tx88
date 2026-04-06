@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import time
 import json
 from decimal import Decimal
@@ -13,6 +14,12 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
 API_ORIGIN = "https://api.enablebanking.com"
+IPIFY_URL = "https://api.ipify.org"
+
+PSU_USER_AGENTS = [
+    "Mozilla/5.0 (X11; Linux x86_64) Chrome/104.0.0.0 Gecko/20100101 Firefox/103.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+]
 
 logger = logging.getLogger("tx88.server")
 logging.basicConfig(level=logging.INFO)
@@ -67,16 +74,26 @@ class Settings:
 # Module-level settings object will be assigned in lifespan
 santander_settings: Optional["Settings"] = None
 mbank_settings: Optional["Settings"] = None
+public_ip: Optional[str] = None
+
+
+async def _fetch_public_ip() -> str:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(IPIFY_URL) as resp:
+            return await resp.text()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global santander_settings
     global mbank_settings
+    global public_ip
     santander_settings = await Settings.load(SANTANDER_SESSION_UUID)
     mbank_settings = await Settings.load(MBANK_SESSION_UUID)
     for settings in (santander_settings, mbank_settings):
         logger.info("Settings loaded: application_id=%s session_uuid=%s", settings.application_id, settings.session_uuid)
+    public_ip = await _fetch_public_ip()
+    logger.info("Detected public IP: %s", public_ip)
     yield
 
 
@@ -93,9 +110,9 @@ def build_jwt_token(settings: Settings) -> str:
 
 
 class Application:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, extra_headers: dict | None = None):
         self.settings = settings
-        self.headers = {"Authorization": f"Bearer {build_jwt_token(settings)}"}
+        self.headers = {"Authorization": f"Bearer {build_jwt_token(settings)}", **(extra_headers or {})}
 
     async def __aenter__(self):
         self.client = aiohttp.ClientSession()
@@ -149,11 +166,15 @@ class AccountsResponse(BaseModel):
 
 @app.get("/santander-balance")
 async def santander_balance():
-    # Fetch session from the API
-    async with Application(santander_settings) as app:
+    psu_headers = {
+        "Psu-Ip-Address": public_ip,
+        "Psu-User-Agent": random.choice(PSU_USER_AGENTS),
+    }
+    async with Application(santander_settings, extra_headers=psu_headers) as app:
         session = await app.get_session()
         results = await app.get_account_balances(session)
-    return AccountsResponse.from_eb_accounts(results)
+    resp = AccountsResponse.from_eb_accounts(results)
+    return resp
 
 
 @app.get("/mbank-balance")

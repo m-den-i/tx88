@@ -56,9 +56,8 @@ async def test_santander_balance_handler(monkeypatch):
             # Assert
             assert resp.status_code == 200
             data = resp.json()
-            assert "accounts" in data
-            assert isinstance(data["accounts"], list)
-            assert data["accounts"][0]["balances"] == balances_data
+            assert data["accounts"][0]["balance"] == balances_data["balances"][1]["balance_amount"]["amount"]
+            assert data["accounts"][1]["balance"] == balances_data["balances"][1]["balance_amount"]["amount"]
 
         # Exit lifespan
         await ctx.__aexit__(None, None, None)
