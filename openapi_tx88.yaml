@@ -1,0 +1,514 @@
+openapi: 3.1.0
+info:
+  title: tx88 API
+  version: 0.1.0
+  description: >
+    FastAPI service that fetches bank data from Enable Banking API
+    (Santander PL, mBank PL) and exposes balance, transaction, and
+    card-blockade endpoints.
+
+    Auth: JWT Bearer token required by the upstream EB API is handled
+    internally per-request. This service itself has no auth layer.
+
+servers:
+  - url: http://localhost:8000
+    description: Local dev
+
+paths:
+  /santander-balance:
+    get:
+      summary: Santander Balance
+      description: >
+        Returns ITAV (intraday available) balances for all accounts
+        in the Santander session. Passes PSU headers to Enable Banking.
+      operationId: santander_balance
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountsResponse'
+        '500':
+          $ref: '#/components/responses/ExternalAPIError'
+
+  /mbank-balance:
+    get:
+      summary: mBank Balance
+      description: >
+        Returns ITAV (intraday available) balances for all accounts
+        in the mBank session.
+      operationId: mbank_balance
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountsResponse'
+        '500':
+          $ref: '#/components/responses/ExternalAPIError'
+
+  /santander-card-blockades:
+    get:
+      summary: Santander Card Blockades
+      description: >
+        Returns pending (PDNG) transactions for all accounts in the
+        Santander session — these are card authorizations/holds that
+        have not yet settled. Passes PSU headers to Enable Banking.
+      operationId: santander_card_blockades
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+        '500':
+          $ref: '#/components/responses/ExternalAPIError'
+
+  /mbank-card-blockades:
+    get:
+      summary: mBank Card Blockades
+      description: >
+        Returns pending (PDNG) transactions for all accounts in the
+        mBank session — card authorizations/holds not yet settled.
+      operationId: mbank_card_blockades
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+        '500':
+          $ref: '#/components/responses/ExternalAPIError'
+
+  /santander-transactions:
+    get:
+      summary: Santander Settled Transactions
+      description: >
+        Returns booked (BOOK) transactions for all accounts in the
+        Santander session. Optionally filtered by date range.
+        Passes PSU headers to Enable Banking.
+      operationId: santander_transactions
+      parameters:
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '500':
+          $ref: '#/components/responses/ExternalAPIError'
+
+  /mbank-transactions:
+    get:
+      summary: mBank Settled Transactions
+      description: >
+        Returns booked (BOOK) transactions for all accounts in the
+        mBank session. Optionally filtered by date range.
+      operationId: mbank_transactions
+      parameters:
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '500':
+          $ref: '#/components/responses/ExternalAPIError'
+
+components:
+  parameters:
+    DateFrom:
+      name: date_from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+        nullable: true
+      description: "Date to fetch transactions from (YYYY-MM-DD, inclusive)"
+    DateTo:
+      name: date_to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+        nullable: true
+      description: "Date to fetch transactions to (YYYY-MM-DD, inclusive)"
+
+  responses:
+    ExternalAPIError:
+      description: "Enable Banking API returned a non-200 response"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ExternalAPIErrorDetail'
+
+  schemas:
+    BalanceResponse:
+      type: object
+      required:
+        - uuid
+        - balance
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          description: "Account UID from the EB session"
+        balance:
+          type: string
+          description: "ITAV balance amount as decimal string"
+          example: "1234.56"
+
+    AccountsResponse:
+      type: object
+      required:
+        - accounts
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceResponse'
+
+    AmountType:
+      type: object
+      required:
+        - currency
+        - amount
+      properties:
+        currency:
+          type: string
+          example: PLN
+        amount:
+          type: string
+          example: "99.99"
+
+    PostalAddress:
+      type: object
+      properties:
+        address_type:
+          type: string
+          nullable: true
+        department:
+          type: string
+          nullable: true
+        sub_department:
+          type: string
+          nullable: true
+        street_name:
+          type: string
+          nullable: true
+        building_number:
+          type: string
+          nullable: true
+        post_code:
+          type: string
+          nullable: true
+        town_name:
+          type: string
+          nullable: true
+        country_sub_division:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        address_line:
+          type: array
+          items:
+            type: string
+          nullable: true
+
+    ContactDetails:
+      type: object
+      properties:
+        email_address:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+
+    GenericIdentification:
+      type: object
+      properties:
+        identification:
+          type: string
+          nullable: true
+        scheme_name:
+          type: string
+          nullable: true
+
+    AccountIdentification:
+      type: object
+      properties:
+        iban:
+          type: string
+          nullable: true
+        other:
+          $ref: '#/components/schemas/GenericIdentification'
+
+    ClearingSystemMemberIdentification:
+      type: object
+      properties:
+        clearing_system_id:
+          type: string
+          nullable: true
+        member_id:
+          type: string
+          nullable: true
+
+    FinancialInstitutionIdentification:
+      type: object
+      properties:
+        bic_fi:
+          type: string
+          nullable: true
+        clearing_system_member_id:
+          allOf:
+            - $ref: '#/components/schemas/ClearingSystemMemberIdentification'
+          nullable: true
+        name:
+          type: string
+          nullable: true
+
+    BankTransactionCode:
+      type: object
+      properties:
+        description:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+        sub_code:
+          type: string
+          nullable: true
+
+    ExchangeRate:
+      type: object
+      properties:
+        unit_currency:
+          type: string
+          nullable: true
+        exchange_rate:
+          type: string
+          nullable: true
+        rate_type:
+          type: string
+          nullable: true
+        contract_identification:
+          type: string
+          nullable: true
+        instructed_amount:
+          allOf:
+            - $ref: '#/components/schemas/AmountType'
+          nullable: true
+
+    PartyIdentification:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        postal_address:
+          allOf:
+            - $ref: '#/components/schemas/PostalAddress'
+          nullable: true
+        organisation_id:
+          type: object
+          nullable: true
+        private_id:
+          type: object
+          nullable: true
+        contact_details:
+          allOf:
+            - $ref: '#/components/schemas/ContactDetails'
+          nullable: true
+
+    Transaction:
+      type: object
+      required:
+        - transaction_amount
+        - credit_debit_indicator
+        - status
+        - booking_date
+      properties:
+        entry_reference:
+          type: string
+          nullable: true
+        merchant_category_code:
+          type: string
+          nullable: true
+          description: "ISO 18245 MCC"
+        transaction_amount:
+          $ref: '#/components/schemas/AmountType'
+        creditor:
+          allOf:
+            - $ref: '#/components/schemas/PartyIdentification'
+          nullable: true
+        creditor_account:
+          allOf:
+            - $ref: '#/components/schemas/AccountIdentification'
+          nullable: true
+        creditor_agent:
+          allOf:
+            - $ref: '#/components/schemas/FinancialInstitutionIdentification'
+          nullable: true
+        debtor:
+          allOf:
+            - $ref: '#/components/schemas/PartyIdentification'
+          nullable: true
+        debtor_account:
+          allOf:
+            - $ref: '#/components/schemas/AccountIdentification'
+          nullable: true
+        debtor_agent:
+          allOf:
+            - $ref: '#/components/schemas/FinancialInstitutionIdentification'
+          nullable: true
+        bank_transaction_code:
+          allOf:
+            - $ref: '#/components/schemas/BankTransactionCode'
+          nullable: true
+        credit_debit_indicator:
+          type: string
+          enum: [CRDT, DBIT]
+        status:
+          type: string
+          enum: [BOOK, PDNG, INFO]
+        booking_date:
+          type: string
+          format: date
+        value_date:
+          type: string
+          format: date
+          nullable: true
+        transaction_date:
+          type: string
+          format: date
+          nullable: true
+        balance_after_transaction:
+          allOf:
+            - $ref: '#/components/schemas/AmountType'
+          nullable: true
+        reference_number:
+          type: string
+          nullable: true
+        reference_number_schema:
+          type: string
+          nullable: true
+        remittance_information:
+          type: array
+          items:
+            type: string
+          nullable: true
+        debtor_account_additional_identification:
+          allOf:
+            - $ref: '#/components/schemas/GenericIdentification'
+          nullable: true
+        creditor_account_additional_identification:
+          allOf:
+            - $ref: '#/components/schemas/GenericIdentification'
+          nullable: true
+        exchange_rate:
+          allOf:
+            - $ref: '#/components/schemas/ExchangeRate'
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        transaction_id:
+          type: string
+          nullable: true
+
+    AccountTransactionsResponse:
+      type: object
+      required:
+        - account_uid
+        - transactions
+      properties:
+        account_uid:
+          type: string
+          format: uuid
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    TransactionsResponse:
+      type: object
+      required:
+        - accounts
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountTransactionsResponse'
+
+    ExternalAPIErrorDetail:
+      type: object
+      properties:
+        detail:
+          type: object
+          properties:
+            error:
+              type: string
+              example: external_api_error
+            status:
+              type: integer
+              example: 401
+            text:
+              type: string
+
+    ValidationError:
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - type: integer
+        msg:
+          type: string
+        type:
+          type: string
+        input:
+          description: "The invalid input value"
+        ctx:
+          type: object
+
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'

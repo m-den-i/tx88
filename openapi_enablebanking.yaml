@@ -1,0 +1,1691 @@
+openapi: 3.0.0
+info:
+  title: Enable Banking API
+  version: 1.0.0
+  description: "API for account information and payment initiation services"
+
+servers:
+  - url: https://api.enablebanking.com
+  - url: https://api.tilisy.com
+    description: Deprecated
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT signed with RSA private key. Headers: {kid: applicationId}. Claims: {iss, aud: api.enablebanking.com, iat, exp}."
+
+  schemas:
+    ASPSP:
+      type: object
+      required:
+        - name
+        - country
+      properties:
+        name:
+          type: string
+          description: "Financial institution identifier"
+        country:
+          type: string
+          description: "ISO 3166 two-letter country code"
+
+    ASPSPData:
+      allOf:
+        - $ref: '#/components/schemas/ASPSP'
+      properties:
+        logo:
+          type: string
+          format: uri
+        psu_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PSUType'
+        auth_methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthMethod'
+        maximum_consent_validity:
+          type: integer
+        beta:
+          type: boolean
+        bic:
+          type: string
+        required_psu_headers:
+          type: array
+          items:
+            type: string
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponsePaymentType'
+        group:
+          $ref: '#/components/schemas/ASPSPGroup'
+        sandbox:
+          $ref: '#/components/schemas/SandboxInfo'
+
+    ASPSPGroup:
+      type: object
+      required:
+        - name
+        - logo
+      properties:
+        name:
+          type: string
+        logo:
+          type: string
+          format: uri
+
+    Access:
+      type: object
+      required:
+        - valid_until
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentification'
+        balances:
+          type: boolean
+        transactions:
+          type: boolean
+        valid_until:
+          type: string
+          format: date-time
+
+    AccountIdentification:
+      type: object
+      properties:
+        iban:
+          type: string
+        other:
+          $ref: '#/components/schemas/GenericIdentification'
+
+    GenericIdentification:
+      type: object
+      properties:
+        identification:
+          type: string
+        scheme_name:
+          type: string
+
+    AccountResource:
+      type: object
+      required:
+        - cash_account_type
+        - currency
+        - identification_hash
+        - identification_hashes
+      properties:
+        account_id:
+          $ref: '#/components/schemas/AccountIdentification'
+        all_account_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericIdentification'
+        account_servicer:
+          $ref: '#/components/schemas/FinancialInstitutionIdentification'
+        name:
+          type: string
+        details:
+          type: string
+        usage:
+          $ref: '#/components/schemas/Usage'
+        cash_account_type:
+          $ref: '#/components/schemas/CashAccountType'
+        product:
+          type: string
+        currency:
+          type: string
+        psu_status:
+          type: string
+        credit_limit:
+          $ref: '#/components/schemas/AmountType'
+        legal_age:
+          type: boolean
+        postal_address:
+          $ref: '#/components/schemas/PostalAddress'
+        uid:
+          type: string
+          format: uuid
+        identification_hash:
+          type: string
+        identification_hashes:
+          type: array
+          items:
+            type: string
+
+    FinancialInstitutionIdentification:
+      type: object
+      properties:
+        bic_fi:
+          type: string
+        clearing_system_member_id:
+          $ref: '#/components/schemas/ClearingSystemMemberIdentification'
+        name:
+          type: string
+
+    ClearingSystemMemberIdentification:
+      type: object
+      properties:
+        clearing_system_id:
+          type: string
+        member_id:
+          type: string
+
+    PostalAddress:
+      type: object
+      properties:
+        address_type:
+          $ref: '#/components/schemas/AddressType'
+        department:
+          type: string
+        sub_department:
+          type: string
+        street_name:
+          type: string
+        building_number:
+          type: string
+        post_code:
+          type: string
+        town_name:
+          type: string
+        country_sub_division:
+          type: string
+        country:
+          type: string
+        address_line:
+          type: array
+          items:
+            type: string
+
+    AddressType:
+      type: string
+      enum:
+        - Business
+        - Correspondence
+        - DeliveryTo
+        - MailTo
+        - POBox
+        - Postal
+        - Residential
+        - Statement
+
+    AmountType:
+      type: object
+      required:
+        - currency
+        - amount
+      properties:
+        currency:
+          type: string
+        amount:
+          type: string
+
+    Usage:
+      type: string
+
+    CashAccountType:
+      type: string
+      enum:
+        - CACC
+        - CARD
+        - CASH
+        - LOAN
+        - OTHR
+        - SVGS
+
+    AuthMethod:
+      type: object
+      required:
+        - psu_type
+        - approach
+        - hidden_method
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        psu_type:
+          $ref: '#/components/schemas/PSUType'
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/Credential'
+        approach:
+          $ref: '#/components/schemas/AuthenticationApproach'
+        hidden_method:
+          type: boolean
+
+    PSUType:
+      type: string
+      enum:
+        - business
+        - personal
+
+    AuthenticationApproach:
+      type: string
+      enum:
+        - DECOUPLED
+        - EMBEDDED
+        - REDIRECT
+
+    Credential:
+      type: object
+      required:
+        - name
+        - title
+        - required
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        required:
+          type: boolean
+        description:
+          type: string
+        template:
+          type: string
+
+    StartAuthorizationRequest:
+      type: object
+      required:
+        - access
+        - aspsp
+        - state
+        - redirect_url
+      properties:
+        access:
+          $ref: '#/components/schemas/Access'
+        aspsp:
+          $ref: '#/components/schemas/ASPSP'
+        state:
+          type: string
+        redirect_url:
+          type: string
+        psu_type:
+          $ref: '#/components/schemas/PSUType'
+        auth_method:
+          type: string
+        credentials:
+          type: object
+        credentials_autosubmit:
+          type: boolean
+        language:
+          type: string
+        psu_id:
+          type: string
+
+    StartAuthorizationResponse:
+      type: object
+      required:
+        - url
+        - authorization_id
+      properties:
+        url:
+          type: string
+        authorization_id:
+          type: string
+        psu_id_hash:
+          type: string
+
+    AuthorizeSessionRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+
+    AuthorizeSessionResponse:
+      type: object
+      required:
+        - session_id
+        - accounts
+        - aspsp
+        - psu_type
+        - access
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountResource'
+        aspsp:
+          $ref: '#/components/schemas/ASPSP'
+        psu_type:
+          $ref: '#/components/schemas/PSUType'
+        access:
+          $ref: '#/components/schemas/Access'
+
+    GetSessionResponse:
+      type: object
+      required:
+        - access
+        - accounts
+        - aspsp
+        - authorized
+        - created
+        - psu_type
+        - status
+      properties:
+        access:
+          $ref: '#/components/schemas/Access'
+        accounts:
+          type: array
+          items:
+            type: string
+            format: uuid
+        accounts_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionAccount'
+        aspsp:
+          $ref: '#/components/schemas/ASPSP'
+        authorized:
+          type: string
+          format: date-time
+        closed:
+          type: string
+          format: date-time
+          nullable: true
+        created:
+          type: string
+          format: date-time
+        psu_id_hash:
+          type: string
+        psu_type:
+          $ref: '#/components/schemas/PSUType'
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+
+    SessionAccount:
+      type: object
+      properties:
+        identification_hash:
+          type: string
+        identification_hashes:
+          type: array
+          items:
+            type: string
+        uid:
+          type: string
+          format: uuid
+
+    SessionStatus:
+      type: string
+      enum:
+        - AUTHORIZED
+        - EXPIRED
+        - REVOKED
+
+    BalanceResource:
+      type: object
+      required:
+        - name
+        - balance_amount
+        - balance_type
+      properties:
+        name:
+          type: string
+        balance_amount:
+          $ref: '#/components/schemas/AmountType'
+        balance_type:
+          $ref: '#/components/schemas/BalanceStatus'
+        last_change_date_time:
+          type: string
+          format: date-time
+        reference_date:
+          type: string
+          format: date
+        last_committed_transaction:
+          type: string
+
+    BalanceStatus:
+      type: string
+      enum:
+        - CLAV
+        - CLBD
+        - FWAV
+        - INFO
+        - ITAV
+        - ITBD
+        - OPAV
+        - OPBD
+        - OTHR
+        - PRCD
+        - VALU
+        - XPCD
+
+    HalBalances:
+      type: object
+      required:
+        - balances
+      properties:
+        balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceResource'
+
+    Transaction:
+      type: object
+      properties:
+        entry_reference:
+          type: string
+        merchant_category_code:
+          type: string
+        transaction_amount:
+          $ref: '#/components/schemas/AmountType'
+        creditor:
+          $ref: '#/components/schemas/PartyIdentification'
+        creditor_account:
+          $ref: '#/components/schemas/GenericIdentification'
+        creditor_agent:
+          $ref: '#/components/schemas/FinancialInstitutionIdentification'
+        debtor:
+          $ref: '#/components/schemas/PartyIdentification'
+        debtor_account:
+          $ref: '#/components/schemas/GenericIdentification'
+        debtor_agent:
+          $ref: '#/components/schemas/FinancialInstitutionIdentification'
+        bank_transaction_code:
+          $ref: '#/components/schemas/BankTransactionCode'
+        credit_debit_indicator:
+          $ref: '#/components/schemas/CreditDebitIndicator'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        booking_date:
+          type: string
+          format: date
+        value_date:
+          type: string
+          format: date
+        transaction_date:
+          type: string
+          format: date
+        balance_after_transaction:
+          $ref: '#/components/schemas/AmountType'
+        reference_number:
+          type: string
+        reference_number_schema:
+          type: string
+        remittance_information:
+          type: array
+          items:
+            type: string
+        debtor_account_additional_identification:
+          $ref: '#/components/schemas/GenericIdentification'
+        creditor_account_additional_identification:
+          $ref: '#/components/schemas/GenericIdentification'
+        exchange_rate:
+          $ref: '#/components/schemas/ExchangeRate'
+        note:
+          type: string
+        transaction_id:
+          type: string
+
+    PartyIdentification:
+      type: object
+      properties:
+        name:
+          type: string
+        postal_address:
+          $ref: '#/components/schemas/PostalAddress'
+
+    BankTransactionCode:
+      type: object
+      properties:
+        description:
+          type: string
+        code:
+          type: string
+        sub_code:
+          type: string
+
+    CreditDebitIndicator:
+      type: string
+      enum:
+        - CRDT
+        - DBIT
+
+    TransactionStatus:
+      type: string
+      enum:
+        - BOOK
+        - PDNG
+        - INFO
+
+    ExchangeRate:
+      type: object
+      properties:
+        unit_currency:
+          type: string
+        exchange_rate:
+          type: string
+        rate_type:
+          type: string
+        contract_identification:
+          type: string
+        instructed_amount:
+          $ref: '#/components/schemas/AmountType'
+
+    HalTransactions:
+      type: object
+      required:
+        - transactions
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        continuation_key:
+          type: string
+          nullable: true
+
+    TransactionsFetchStrategy:
+      type: string
+
+    CreatePaymentRequest:
+      type: object
+      required:
+        - aspsp
+        - payment_request
+        - payment_type
+        - psu_type
+        - redirect_url
+        - state
+      properties:
+        aspsp:
+          $ref: '#/components/schemas/ASPSP'
+        payment_request:
+          $ref: '#/components/schemas/PaymentRequestResource'
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        psu_type:
+          $ref: '#/components/schemas/PSUType'
+        redirect_url:
+          type: string
+          format: uri
+        state:
+          type: string
+        auth_method:
+          type: string
+        credentials:
+          type: object
+        language:
+          type: string
+        webhook_url:
+          type: string
+          format: uri
+        psu_id:
+          type: string
+
+    PaymentType:
+      type: string
+      enum:
+        - SEPA
+        - DOMESTIC
+
+    PaymentRequestResource:
+      type: object
+      required:
+        - credit_transfer_transaction
+      properties:
+        credit_transfer_transaction:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditTransferTransaction'
+
+    CreditTransferTransaction:
+      type: object
+      required:
+        - instructed_amount
+        - beneficiary
+      properties:
+        instructed_amount:
+          $ref: '#/components/schemas/AmountType'
+        beneficiary:
+          $ref: '#/components/schemas/Beneficiary'
+        payment_id:
+          $ref: '#/components/schemas/PaymentIdentification'
+        requested_execution_date:
+          type: string
+          format: date
+        reference_number:
+          type: string
+        end_date:
+          type: string
+          format: date
+        execution_rule:
+          type: string
+
+    Beneficiary:
+      type: object
+      required:
+        - creditor_account
+      properties:
+        creditor_agent:
+          $ref: '#/components/schemas/FinancialInstitutionIdentification'
+        creditor:
+          $ref: '#/components/schemas/PartyIdentification'
+        creditor_account:
+          $ref: '#/components/schemas/GenericIdentification'
+        creditor_currency:
+          type: string
+
+    PaymentIdentification:
+      type: object
+      properties:
+        instruction_id:
+          type: string
+        end_to_end_id:
+          type: string
+
+    CreatePaymentResponse:
+      type: object
+      required:
+        - payment_id
+        - status
+        - url
+        - psu_id_hash
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        url:
+          type: string
+          format: uri
+        psu_id_hash:
+          type: string
+
+    PaymentStatus:
+      type: string
+      enum:
+        - ACCC
+        - ACCP
+        - ACCR
+        - ACSC
+        - ACSP
+        - ACTC
+        - ACWC
+        - ACWP
+        - PDNG
+        - RCVD
+        - RJCT
+
+    GetPaymentResponse:
+      type: object
+      required:
+        - payment_id
+        - status
+        - payment_details
+        - payment_type
+        - aspsp
+        - final_status
+      properties:
+        payment_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        payment_details:
+          $ref: '#/components/schemas/PaymentRequestResourceDetails'
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        aspsp:
+          $ref: '#/components/schemas/ASPSP'
+        final_status:
+          type: boolean
+        status_reason_information:
+          $ref: '#/components/schemas/StatusReasonInformation'
+        psu_id_hash:
+          type: string
+
+    PaymentRequestResourceDetails:
+      type: object
+      properties:
+        credit_transfer_transaction:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditTransferTransaction'
+        debtor_account:
+          $ref: '#/components/schemas/GenericIdentification'
+
+    StatusReasonInformation:
+      type: object
+      properties:
+        status_reason_code:
+          type: string
+        status_reason_description:
+          type: string
+
+    CreditTransferTransactionDetails:
+      type: object
+      properties:
+        instructed_amount:
+          $ref: '#/components/schemas/AmountType'
+        beneficiary:
+          $ref: '#/components/schemas/Beneficiary'
+        payment_id:
+          $ref: '#/components/schemas/PaymentIdentification'
+        requested_execution_date:
+          type: string
+          format: date
+        reference_number:
+          type: string
+        end_date:
+          type: string
+          format: date
+        execution_rule:
+          type: string
+        frequency:
+          type: string
+        ultimate_debtor:
+          $ref: '#/components/schemas/PartyIdentification'
+        ultimate_creditor:
+          $ref: '#/components/schemas/PartyIdentification'
+        regulatory_reporting:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegulatoryReporting'
+        remittance_information:
+          type: array
+          items:
+            type: string
+        transaction_id:
+          type: string
+        transaction_status:
+          $ref: '#/components/schemas/TransactionStatus'
+
+    RegulatoryReporting:
+      type: object
+      properties:
+        authority:
+          $ref: '#/components/schemas/RegulatoryAuthority'
+        details:
+          $ref: '#/components/schemas/RegulatoryReportingDetails'
+
+    RegulatoryAuthority:
+      type: object
+      properties:
+        country:
+          type: string
+        name:
+          type: string
+
+    RegulatoryReportingDetails:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/AmountType'
+        code:
+          type: string
+        information:
+          type: string
+
+    GetPaymentTransactionResponse:
+      type: object
+      required:
+        - payment_id
+        - transaction_details
+      properties:
+        payment_id:
+          type: string
+        transaction_details:
+          $ref: '#/components/schemas/CreditTransferTransactionDetails'
+
+    GetAspspsResponse:
+      type: object
+      required:
+        - aspsps
+      properties:
+        aspsps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ASPSPData'
+
+    ResponsePaymentType:
+      type: object
+      properties:
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        psu_type:
+          $ref: '#/components/schemas/PSUType'
+        allowed_auth_methods:
+          type: array
+          items:
+            type: string
+        currencies:
+          type: array
+          items:
+            type: string
+        debtor_account_required:
+          type: boolean
+        debtor_account_schemas:
+          type: array
+          items:
+            type: string
+        creditor_account_schemas:
+          type: array
+          items:
+            type: string
+        creditor_agent_bic_fi_required:
+          type: boolean
+        creditor_agent_clearing_system_member_id_required:
+          type: boolean
+        creditor_country_required:
+          type: boolean
+        creditor_name_required:
+          type: boolean
+        creditor_postal_address_required:
+          type: boolean
+        debtor_contact_email_required:
+          type: boolean
+        debtor_contact_phone_required:
+          type: boolean
+        debtor_currency_required:
+          type: boolean
+        max_transactions:
+          type: integer
+        priority_codes:
+          type: array
+          items:
+            type: string
+        reference_number_schemas:
+          type: array
+          items:
+            type: string
+        reference_number_supported:
+          type: boolean
+        regulatory_reporting_code_required:
+          type: boolean
+        remittance_information_lines:
+          type: array
+          items:
+            type: object
+        remittance_information_required:
+          type: boolean
+        requested_execution_date_supported:
+          type: boolean
+        requested_execution_date_max_period:
+          type: integer
+        charge_bearer_values:
+          type: array
+          items:
+            type: string
+
+    GetApplicationResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        kid:
+          type: string
+        environment:
+          type: string
+          enum:
+            - SANDBOX
+            - PRODUCTION
+        redirect_urls:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+        countries:
+          type: array
+          items:
+            type: string
+        services:
+          type: array
+          items:
+            type: string
+
+    SandboxInfo:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/SandboxUser'
+
+    SandboxUser:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    Service:
+      type: string
+      enum:
+        - AIS
+        - PIS
+
+    SuccessResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+
+paths:
+  /auth:
+    post:
+      summary: "Start user authorization"
+      operationId: startUserAuthorization
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartAuthorizationRequest'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartAuthorizationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /sessions:
+    post:
+      summary: "Authorize user session"
+      operationId: authorizeUserSession
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizeSessionRequest'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizeSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /sessions/{session_id}:
+    get:
+      summary: "Get session data"
+      operationId: getSessionData
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Previously authorized session ID"
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: "Delete session"
+      operationId: deleteSession
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Previously authorized session ID"
+        - $ref: '#/components/parameters/PsuIpAddress'
+        - $ref: '#/components/parameters/PsuUserAgent'
+        - $ref: '#/components/parameters/PsuReferer'
+        - $ref: '#/components/parameters/PsuAccept'
+        - $ref: '#/components/parameters/PsuAcceptCharset'
+        - $ref: '#/components/parameters/PsuAcceptEncoding'
+        - $ref: '#/components/parameters/PsuAcceptLanguage'
+        - $ref: '#/components/parameters/PsuGeoLocation'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /accounts/{account_id}/details:
+    get:
+      summary: "Get account details"
+      operationId: getAccountDetails
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Account ID"
+        - $ref: '#/components/parameters/PsuIpAddress'
+        - $ref: '#/components/parameters/PsuUserAgent'
+        - $ref: '#/components/parameters/PsuReferer'
+        - $ref: '#/components/parameters/PsuAccept'
+        - $ref: '#/components/parameters/PsuAcceptCharset'
+        - $ref: '#/components/parameters/PsuAcceptEncoding'
+        - $ref: '#/components/parameters/PsuAcceptLanguage'
+        - $ref: '#/components/parameters/PsuGeoLocation'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /accounts/{account_id}/balances:
+    get:
+      summary: "Get account balances"
+      operationId: getAccountBalances
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "PSU account ID accessible in the provided session"
+        - $ref: '#/components/parameters/PsuIpAddress'
+        - $ref: '#/components/parameters/PsuUserAgent'
+        - $ref: '#/components/parameters/PsuReferer'
+        - $ref: '#/components/parameters/PsuAccept'
+        - $ref: '#/components/parameters/PsuAcceptCharset'
+        - $ref: '#/components/parameters/PsuAcceptEncoding'
+        - $ref: '#/components/parameters/PsuAcceptLanguage'
+        - $ref: '#/components/parameters/PsuGeoLocation'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HalBalances'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /accounts/{account_id}/transactions:
+    get:
+      summary: "Get account transactions"
+      operationId: getAccountTransactions
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "PSU account ID accessible in the provided session"
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: "Date to fetch transactions from (including, UTC)"
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: "Date to fetch transactions to (including, UTC)"
+        - name: continuation_key
+          in: query
+          schema:
+            type: string
+          description: "Key allowing iteration over multiple API pages"
+        - name: transaction_status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionStatus'
+          description: "Filter transactions by status (BOOK=settled, PDNG=pending/card holds, INFO=informational)"
+        - name: strategy
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionsFetchStrategy'
+          description: "Strategy how transactions are fetched"
+        - $ref: '#/components/parameters/PsuIpAddress'
+        - $ref: '#/components/parameters/PsuUserAgent'
+        - $ref: '#/components/parameters/PsuReferer'
+        - $ref: '#/components/parameters/PsuAccept'
+        - $ref: '#/components/parameters/PsuAcceptCharset'
+        - $ref: '#/components/parameters/PsuAcceptEncoding'
+        - $ref: '#/components/parameters/PsuAcceptLanguage'
+        - $ref: '#/components/parameters/PsuGeoLocation'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HalTransactions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /accounts/{account_id}/transactions/{transaction_id}:
+    get:
+      summary: "Get transaction details"
+      operationId: getTransactionDetails
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Account ID"
+        - name: transaction_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Transaction ID"
+        - $ref: '#/components/parameters/PsuIpAddress'
+        - $ref: '#/components/parameters/PsuUserAgent'
+        - $ref: '#/components/parameters/PsuReferer'
+        - $ref: '#/components/parameters/PsuAccept'
+        - $ref: '#/components/parameters/PsuAcceptCharset'
+        - $ref: '#/components/parameters/PsuAcceptEncoding'
+        - $ref: '#/components/parameters/PsuAcceptLanguage'
+        - $ref: '#/components/parameters/PsuGeoLocation'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments:
+    post:
+      summary: "Create payment"
+      operationId: createPayment
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/{payment_id}:
+    get:
+      summary: "Get payment"
+      operationId: getPayment
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: payment_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Payment ID"
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: "Delete payment"
+      operationId: deletePayment
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: payment_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Payment ID"
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/{payment_id}/transactions/{transaction_id}:
+    get:
+      summary: "Get payment transaction"
+      operationId: getPaymentTransaction
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: payment_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Payment ID"
+        - name: transaction_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Transaction ID"
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPaymentTransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /aspsps:
+    get:
+      summary: "Get list of ASPSPs (banks)"
+      operationId: getAspsps
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: country
+          in: query
+          schema:
+            type: string
+          description: "Filter by ISO 3166 country code"
+        - name: psu_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PSUType'
+          description: "Filter by PSU type"
+        - name: service
+          in: query
+          schema:
+            $ref: '#/components/schemas/Service'
+          description: "Filter by supported service (AIS/PIS)"
+        - name: payment_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentType'
+          description: "Filter by supported payment type"
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAspspsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /application:
+    get:
+      summary: "Get application metadata"
+      operationId: getApplication
+      security:
+        - jwtAuth: []
+      responses:
+        '200':
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetApplicationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '408':
+          $ref: '#/components/responses/Timeout'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  parameters:
+    PsuIpAddress:
+      name: Psu-Ip-Address
+      in: header
+      schema:
+        type: string
+      description: "PSU IP address"
+    PsuUserAgent:
+      name: Psu-User-Agent
+      in: header
+      schema:
+        type: string
+      description: "PSU browser User-Agent"
+    PsuReferer:
+      name: Psu-Referer
+      in: header
+      schema:
+        type: string
+      description: "PSU Referer"
+    PsuAccept:
+      name: Psu-Accept
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept header"
+    PsuAcceptCharset:
+      name: Psu-Accept-Charset
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept-Charset"
+    PsuAcceptEncoding:
+      name: Psu-Accept-Encoding
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept-Encoding"
+    PsuAcceptLanguage:
+      name: Psu-Accept-language
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept-Language"
+    PsuGeoLocation:
+      name: Psu-Geo-Location
+      in: header
+      schema:
+        type: string
+      description: "PSU geo location (comma-separated latitude,longitude)"
+
+  responses:
+    BadRequest:
+      description: "Bad Request"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: "Unauthorized"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: "Forbidden"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: "Not Found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Timeout:
+      description: "Request Timeout"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: "Unprocessable Entity"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TooManyRequests:
+      description: "Too Many Requests"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: "Internal Server Error"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

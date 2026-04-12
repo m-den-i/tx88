@@ -9,9 +9,11 @@ from uuid import UUID
 
 import aiohttp
 import jwt as pyjwt
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, status
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
+
+from transaction_converter import Transaction
 
 API_ORIGIN = "https://api.enablebanking.com"
 IPIFY_URL = "https://api.ipify.org"
@@ -109,6 +111,11 @@ def build_jwt_token(settings: Settings) -> str:
     return jwt_token
 
 
+class AccountTransactionsResponse(BaseModel):
+    account_uid: UUID
+    transactions: list[Transaction]
+
+
 class Application:
     def __init__(self, settings: Settings, extra_headers: dict | None = None):
         self.settings = settings
@@ -145,6 +152,47 @@ class Application:
             results.append({"account_uid": account_uid, "balances": bal})
         return results
 
+    async def get_account_transactions(
+        self,
+        account_uid: str,
+        transaction_status: str,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> list[Transaction]:
+        params: dict = {"transaction_status": transaction_status}
+        if date_from:
+            params["date_from"] = date_from
+        if date_to:
+            params["date_to"] = date_to
+
+        async with self.client.get(
+            f"{API_ORIGIN}/accounts/{account_uid}/transactions",
+            headers=self.headers,
+            params=params,
+        ) as resp:
+            if resp.status != 200:
+                text = await resp.text()
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={"error": "external_api_error", "status": resp.status, "text": text},
+                )
+            data = await resp.json()
+
+        return [Transaction.model_validate(t) for t in data.get("transactions", [])]
+
+    async def get_all_transactions(
+        self,
+        session_parsed: SessionResponseModel,
+        transaction_status: str,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> list["AccountTransactionsResponse"]:
+        results = []
+        for account_uid in session_parsed.accounts:
+            txns = await self.get_account_transactions(account_uid, transaction_status, date_from, date_to)
+            results.append(AccountTransactionsResponse(account_uid=UUID(account_uid), transactions=txns))
+        return results
+
 
 class BalanceResponse(BaseModel):
     uuid: UUID
@@ -162,6 +210,10 @@ class AccountsResponse(BaseModel):
                 if bal["balance_type"] == "ITAV":
                     accounts.append(BalanceResponse(uuid=UUID(acc["account_uid"]), balance=Decimal(bal["balance_amount"]["amount"])))
         return AccountsResponse.model_validate({"accounts": accounts})
+
+
+class TransactionsResponse(BaseModel):
+    accounts: list[AccountTransactionsResponse]
 
 
 @app.get("/santander-balance")
@@ -184,3 +236,49 @@ async def mbank_balance():
         session = await app.get_session()
         results = await app.get_account_balances(session)
     return AccountsResponse.from_eb_accounts(results)
+
+
+@app.get("/santander-card-blockades", response_model=TransactionsResponse)
+async def santander_card_blockades():
+    psu_headers = {
+        "Psu-Ip-Address": public_ip,
+        "Psu-User-Agent": random.choice(PSU_USER_AGENTS),
+    }
+    async with Application(santander_settings, extra_headers=psu_headers) as app:
+        session = await app.get_session()
+        accounts = await app.get_all_transactions(session, transaction_status="PDNG")
+    return TransactionsResponse(accounts=accounts)
+
+
+@app.get("/mbank-card-blockades", response_model=TransactionsResponse)
+async def mbank_card_blockades():
+    async with Application(mbank_settings) as app:
+        session = await app.get_session()
+        accounts = await app.get_all_transactions(session, transaction_status="PDNG")
+    return TransactionsResponse(accounts=accounts)
+
+
+@app.get("/santander-transactions", response_model=TransactionsResponse)
+async def santander_transactions(
+    date_from: str | None = Query(default=None, description="Date to fetch transactions from (YYYY-MM-DD)"),
+    date_to: str | None = Query(default=None, description="Date to fetch transactions to (YYYY-MM-DD)"),
+):
+    psu_headers = {
+        "Psu-Ip-Address": public_ip,
+        "Psu-User-Agent": random.choice(PSU_USER_AGENTS),
+    }
+    async with Application(santander_settings, extra_headers=psu_headers) as app:
+        session = await app.get_session()
+        accounts = await app.get_all_transactions(session, transaction_status="BOOK", date_from=date_from, date_to=date_to)
+    return TransactionsResponse(accounts=accounts)
+
+
+@app.get("/mbank-transactions", response_model=TransactionsResponse)
+async def mbank_transactions(
+    date_from: str | None = Query(default=None, description="Date to fetch transactions from (YYYY-MM-DD)"),
+    date_to: str | None = Query(default=None, description="Date to fetch transactions to (YYYY-MM-DD)"),
+):
+    async with Application(mbank_settings) as app:
+        session = await app.get_session()
+        accounts = await app.get_all_transactions(session, transaction_status="BOOK", date_from=date_from, date_to=date_to)
+    return TransactionsResponse(accounts=accounts)
