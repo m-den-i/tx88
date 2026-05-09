@@ -6,11 +6,14 @@ from unittest.mock import patch
 
 import pytest
 from aioresponses import aioresponses
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
+
+import server
+from eb_client import ASPSP_NAME, BankSession
 
 SESSION_FIXTURE = os.path.join(ROOT, "fixtures", "session.json")
 BALANCES_FIXTURE = os.path.join(ROOT, "fixtures", "balances.json")
@@ -21,7 +24,6 @@ MBANK_UUID = "test-mbank-uuid"
 
 
 def _mock_bank_session(aspsp):
-    from app import BankSession, ASPSP_NAME
     bs = BankSession.__new__(BankSession)
     bs.session_id = SANTANDER_UUID if aspsp == ASPSP_NAME.SANTANDER else MBANK_UUID
     return bs
@@ -36,7 +38,7 @@ async def test_santander_balance_handler(monkeypatch):
     with open(BALANCES_FIXTURE, "r", encoding="utf-8") as f:
         balances_data = json.load(f)
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get("https://api.ipify.org", body="1.2.3.4")
         mocked.get(f"https://api.enablebanking.com/sessions/{SANTANDER_UUID}", payload=session_data)
 
@@ -44,7 +46,6 @@ async def test_santander_balance_handler(monkeypatch):
         for acct in accounts:
             mocked.get(f"https://api.enablebanking.com/accounts/{acct}/balances", payload=balances_data)
 
-        import server
         importlib.reload(server)
 
         ctx = server.lifespan(server.app)

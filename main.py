@@ -7,26 +7,23 @@ from urllib.parse import parse_qs, urlparse
 
 import click
 
-from app import ASPSP_NAME, Application, BankSession, Settings
+from eb_client import ASPSP_NAME, EnableBankingClient, BankSessionClient, BankSession, Settings
 from transaction_converter import TransactionStatus
 
 API_ORIGIN = "https://api.enablebanking.com"
 ASPSP_COUNTRY = "PL"
 
 
-# ---------------------------------------------------------------------------
-# Core async functions
-# ---------------------------------------------------------------------------
 
 async def _list_asps(country: str):
     settings = await Settings.load()
-    async with Application(settings) as client:
+    async with EnableBankingClient(settings) as client:
         pprint(await client.list_asps(country))
 
 
 async def _create_session(aspsp: ASPSP_NAME):
     settings = await Settings.load()
-    async with Application(settings) as client:
+    async with EnableBankingClient(settings) as client:
         app_data = await client.get_application()
         auth_url = await client.start_auth(
             aspsp=aspsp,
@@ -49,7 +46,7 @@ async def _create_session(aspsp: ASPSP_NAME):
 async def _show_session(aspsp: ASPSP_NAME):
     settings = await Settings.load()
     bank_session = BankSession.load(aspsp)
-    async with Application(settings, bank_session.session_id) as client:
+    async with BankSessionClient(settings, bank_session.session_id) as client:
         session = await client.get_session()
         click.echo(f"Accounts: {session.accounts}")
         for b in await client.get_account_balances(session):
@@ -63,7 +60,7 @@ async def _transactions(aspsp: ASPSP_NAME, date_from: str | None, date_to: str |
     eff_to = date_to or today.isoformat()
     settings = await Settings.load()
     bank_session = BankSession.load(aspsp)
-    async with Application(settings, bank_session.session_id) as client:
+    async with BankSessionClient(settings, bank_session.session_id) as client:
         session = await client.get_session()
         for account_uid in session.accounts:
             txns = await client.get_account_transactions(
@@ -73,9 +70,6 @@ async def _transactions(aspsp: ASPSP_NAME, date_from: str | None, date_to: str |
             pprint([t.model_dump() for t in txns])
 
 
-# ---------------------------------------------------------------------------
-# CLI commands
-# ---------------------------------------------------------------------------
 
 ASPSP_CHOICES = click.Choice([a.name for a in ASPSP_NAME], case_sensitive=False)
 

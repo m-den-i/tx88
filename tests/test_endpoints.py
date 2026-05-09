@@ -2,6 +2,7 @@ import importlib
 import json
 import os
 import sys
+from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +12,9 @@ from httpx import ASGITransport, AsyncClient
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
+
+import server as server_module
+from eb_client import ASPSP_NAME, BankSession
 
 SESSION_FIXTURE = os.path.join(ROOT, "fixtures", "session.json")
 BALANCES_FIXTURE = os.path.join(ROOT, "fixtures", "balances.json")
@@ -61,28 +65,22 @@ def _setup_env(monkeypatch):
 
 
 def _reload_server():
-    import server as srv
-    importlib.reload(srv)
-    return srv
+    importlib.reload(server_module)
+    return server_module
 
 
 def _mock_bank_session(aspsp):
-    from app import BankSession, ASPSP_NAME
     bs = BankSession.__new__(BankSession)
     bs.session_id = SANTANDER_UUID if aspsp == ASPSP_NAME.SANTANDER else MBANK_UUID
     return bs
 
-
-# ---------------------------------------------------------------------------
-# Balance endpoints
-# ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_mbank_balance(monkeypatch):
     _setup_env(monkeypatch)
     srv = _reload_server()
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{MBANK_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(f"{API}/accounts/{acct}/balances", payload=BALANCES_DATA)
@@ -104,10 +102,6 @@ async def test_mbank_balance(monkeypatch):
         assert account["balance"] == expected_balance
 
 
-# ---------------------------------------------------------------------------
-# Card blockade endpoints
-# ---------------------------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_santander_card_blockades(monkeypatch):
     _setup_env(monkeypatch)
@@ -115,7 +109,7 @@ async def test_santander_card_blockades(monkeypatch):
 
     date_from, date_to = "2026-04-05", "2026-04-12"
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{SANTANDER_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(
@@ -151,7 +145,7 @@ async def test_mbank_card_blockades(monkeypatch):
 
     date_from, date_to = "2026-04-05", "2026-04-12"
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{MBANK_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(
@@ -186,7 +180,7 @@ async def test_card_blockades_empty(monkeypatch):
     empty_payload = {"transactions": [], "continuation_key": None}
     date_from, date_to = "2026-04-05", "2026-04-12"
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{MBANK_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(
@@ -212,10 +206,6 @@ async def test_card_blockades_empty(monkeypatch):
         assert acct_data["transactions"] == []
 
 
-# ---------------------------------------------------------------------------
-# Transaction endpoints
-# ---------------------------------------------------------------------------
-
 @pytest.mark.asyncio
 async def test_santander_transactions_explicit_dates(monkeypatch):
     _setup_env(monkeypatch)
@@ -224,7 +214,7 @@ async def test_santander_transactions_explicit_dates(monkeypatch):
     date_from = "2026-04-01"
     date_to = "2026-04-08"
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{SANTANDER_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(
@@ -261,7 +251,7 @@ async def test_mbank_transactions_explicit_dates(monkeypatch):
     date_from = "2026-04-01"
     date_to = "2026-04-08"
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{MBANK_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(
@@ -294,12 +284,11 @@ async def test_transactions_default_date_range(monkeypatch):
     _setup_env(monkeypatch)
     srv = _reload_server()
 
-    from datetime import date, timedelta
     fixed_today = date(2026, 4, 12)
     expected_from = (fixed_today - timedelta(days=7)).isoformat()
     expected_to = fixed_today.isoformat()
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{MBANK_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(
@@ -334,7 +323,7 @@ async def test_transactions_response_structure(monkeypatch):
 
     date_from, date_to = "2026-04-01", "2026-04-08"
 
-    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
+    with aioresponses() as mocked, patch("eb_client.BankSession.load", side_effect=_mock_bank_session):
         mocked.get(f"{API}/sessions/{SANTANDER_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(

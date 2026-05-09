@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `tx88` is a Python 3.13 FastAPI service that fetches bank transaction data from the [Enable Banking API](https://enablebanking.com/) (Santander, mBank) and exposes balance/transaction endpoints.
 
-- `server.py` — FastAPI app, JWT auth, aiohttp API client, `/santander-balance` and `/mbank-balance` endpoints
+- `server.py` — FastAPI app, route handlers, lifespan
+- `eb_client.py` — Enable Banking API client (`EnableBankingClient`, `BankSessionClient`), plus `Settings`/`BankSession` loaders and `ASPSP_NAME` enum
 - `transaction_converter.py` — Pydantic models for transactions + CSV export logic
-- `settings.py` / `redislib.py` — Settings/secrets loading via Redis
 - `main.py` — CLI script for manual API interaction and session creation
 - `fixtures/` — JSON fixtures used in tests
 - `tests/` — pytest test suite
@@ -42,9 +42,9 @@ Session UUIDs are read at startup from `sessions/<ASPSP_NAME.name.lower()>.json`
 
 ## Architecture
 
-**Auth flow**: JWT tokens are built per-request in `build_jwt_token()` — signed with the app's RSA private key, valid for 600s. The `Application` context manager wraps an `aiohttp.ClientSession` with fresh headers.
+**API client**: `EnableBankingClient` handles management endpoints (`list_asps`, `get_application`, `start_auth`, `complete_session`). `BankSessionClient(EnableBankingClient)` adds session-bound endpoints (`get_session`, `get_account_balances`, `get_account_transactions`, `get_all_transactions`). Both are async context managers wrapping `aiohttp.ClientSession`. JWT tokens are minted per-instance in `build_jwt_token()` — RSA-signed, 600 s TTL.
 
-**Lifespan**: `Settings` objects for both banks are loaded at startup via `@asynccontextmanager lifespan`. They are module-level globals (`santander_settings`, `mbank_settings`) typed `Optional[Settings]`.
+**Lifespan**: `settings: Settings`, `bank_sessions: dict[ASPSP_NAME, BankSession]`, and `public_ip: str` are module-level globals populated at startup via `@asynccontextmanager lifespan`.
 
 **Transaction converter**: `TransactionConverter.to_csv()` flattens nested Pydantic models recursively — lists use only the first item.
 
@@ -54,7 +54,8 @@ Session UUIDs are read at startup from `sessions/<ASPSP_NAME.name.lower()>.json`
 - **Pydantic v2**: use `model_validate()` / `model_dump()`, never v1-style `.dict()` / `.parse_obj()`
 - `Decimal` for monetary amounts, never `float`
 - Logger: `logging.getLogger("tx88.<module_name>")` with `%s`-style formatting
-- `from __future__ import annotations` in files with forward references
+- **Comments**: no `# --- Section ---` banners or decorative dividers. Group code by ordering and naming. Add a comment only when the *why* is non-obvious.
+- **Imports**: always at module top-level. If a local import seems necessary, flag it — it usually signals a circular dependency or design issue that should be fixed instead.
 
 ## Testing Patterns
 

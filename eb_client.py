@@ -110,10 +110,9 @@ def build_jwt_token(settings: Settings) -> str:
     return jwt_token
 
 
-class Application:
-    def __init__(self, settings: Settings, session_uuid: str | None = None, extra_headers: dict | None = None):
+class EnableBankingClient:
+    def __init__(self, settings: Settings, extra_headers: dict | None = None):
         self.settings = settings
-        self.session_uuid = session_uuid
         self.headers = {"Authorization": f"Bearer {build_jwt_token(settings)}", **(extra_headers or {})}
 
     async def __aenter__(self):
@@ -122,10 +121,6 @@ class Application:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self.client.close()
-
-    # ------------------------------------------------------------------
-    # Management operations (no session_uuid required)
-    # ------------------------------------------------------------------
 
     async def list_asps(self, country: str) -> list[dict]:
         async with self.client.get(f"{API_ORIGIN}/aspsps", headers=self.headers) as resp:
@@ -167,9 +162,11 @@ class Application:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
             return await resp.json()
 
-    # ------------------------------------------------------------------
-    # Session operations (session_uuid required)
-    # ------------------------------------------------------------------
+
+class BankSessionClient(EnableBankingClient):
+    def __init__(self, settings: Settings, session_uuid: str, extra_headers: dict | None = None):
+        super().__init__(settings, extra_headers)
+        self.session_uuid = session_uuid
 
     async def get_session(self) -> SessionResponseModel:
         async with self.client.get(f"{API_ORIGIN}/sessions/{self.session_uuid}", headers=self.headers) as resp:

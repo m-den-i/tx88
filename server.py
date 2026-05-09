@@ -9,7 +9,7 @@ from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
-from app import Application, Settings, BankSession, AccountTransactionsResponse, ASPSP_NAME
+from eb_client import BankSessionClient, Settings, BankSession, AccountTransactionsResponse, ASPSP_NAME
 from transaction_converter import TransactionStatus
 
 IPIFY_URL = "https://api.ipify.org"
@@ -92,7 +92,7 @@ def _date_range_or_defaults(
 
 @app.get("/santander-balance")
 async def santander_balance():
-    async with Application(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
+    async with BankSessionClient(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
         session = await client.get_session()
         results = await client.get_account_balances(session)
     return AccountsResponse.from_eb_accounts(results)
@@ -100,7 +100,7 @@ async def santander_balance():
 
 @app.get("/mbank-balance")
 async def mbank_balance():
-    async with Application(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
+    async with BankSessionClient(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
         session = await client.get_session()
         results = await client.get_account_balances(session)
     return AccountsResponse.from_eb_accounts(results)
@@ -112,7 +112,7 @@ async def santander_card_blockades(
     date_to: str | None = Query(default=None, description="Date to fetch blockades to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
+    async with BankSessionClient(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,
@@ -129,7 +129,7 @@ async def mbank_card_blockades(
     date_to: str | None = Query(default=None, description="Date to fetch blockades to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
+    async with BankSessionClient(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,
@@ -146,7 +146,7 @@ async def santander_transactions(
     date_to: str | None = Query(default=None, description="Date to fetch transactions to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
+    async with BankSessionClient(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,
@@ -163,7 +163,7 @@ async def mbank_transactions(
     date_to: str | None = Query(default=None, description="Date to fetch transactions to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
+    async with BankSessionClient(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,

@@ -33,8 +33,6 @@ MINIMAL = {
 }
 
 
-# --- Validation ---
-
 class TestTransactionValidation:
     def test_minimal_valid(self):
         t = Transaction(**MINIMAL)
@@ -90,8 +88,6 @@ class TestTransactionValidation:
         assert t.exchange_rate.instructed_amount.currency == "EUR"
 
 
-# --- _flatten helper ---
-
 class TestFlatten:
     def test_scalar(self):
         assert _flatten("hello", "key") == {"key": "hello"}
@@ -122,8 +118,6 @@ class TestFlatten:
         assert result["creditor_postal_address_country"] == "PL"
         assert result["creditor_postal_address_address_line"] == "Line1"
 
-
-# --- TransactionConverter.to_flat_dict ---
 
 class TestToFlatDict:
     def test_minimal_transaction(self):
@@ -184,8 +178,6 @@ class TestToFlatDict:
         assert row["debtor_postal_address_address_line"] == "123 Main St"
 
 
-# --- TransactionConverter.to_csv ---
-
 class TestToCsv:
     def _parse_csv(self, csv_str: str) -> list[dict]:
         return list(csv.DictReader(io.StringIO(csv_str)))
@@ -224,8 +216,6 @@ class TestToCsv:
         # None fields appear as empty string in CSV
         assert row.get("creditor") == "" or row.get("creditor") is None
 
-
-# --- Integration with real fixture ---
 
 class TestRealFixture:
     @pytest.fixture

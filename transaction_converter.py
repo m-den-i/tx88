@@ -15,8 +15,6 @@ class TransactionStatus(str, Enum):
     INFO = "INFO"
 
 
-# --- Sub-schemas ---
-
 class AmountType(BaseModel):
     currency: str
     amount: str
@@ -83,8 +81,6 @@ class PartyIdentification(BaseModel):
     contact_details: Optional[ContactDetails] = None
 
 
-# --- Main Transaction model ---
-
 class Transaction(BaseModel):
     entry_reference: Optional[str] = None
     merchant_category_code: Optional[str] = None
@@ -112,8 +108,6 @@ class Transaction(BaseModel):
     transaction_id: Optional[str] = None
 
 
-# --- Flattening ---
-
 def _flatten(data: Any, prefix: str = "") -> dict[str, Any]:
     """Recursively flatten nested dicts. Lists: take first item only."""
     if isinstance(data, dict):
@@ -127,8 +121,6 @@ def _flatten(data: Any, prefix: str = "") -> dict[str, Any]:
         return _flatten(first, prefix)
     return {prefix: data}
 
-
-# --- Converter ---
 
 class TransactionConverter:
     @staticmethod
