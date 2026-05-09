@@ -610,6 +610,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "aioresponses" },
+    { name = "click" },
     { name = "fastapi" },
     { name = "pydantic" },
     { name = "pyjwt", extra = ["crypto"] },
@@ -624,6 +625,7 @@ dependencies = [
 requires-dist = [
     { name = "aiohttp" },
     { name = "aioresponses" },
+    { name = "click", specifier = ">=8.0" },
     { name = "fastapi", specifier = ">=0.95" },
     { name = "pydantic" },
     { name = "pyjwt", extras = ["crypto"], specifier = "==2.0.1" },

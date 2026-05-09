@@ -32,13 +32,13 @@ No lint or type-check commands are configured. Do not add linting steps unless r
 ## Required Environment Variables
 
 ```
-SANTANDER_CONFIG_PATH=config.json
-SANTANDER_SESSION_UUID=<uuid>
-MBANK_SESSION_UUID=<uuid>
+CONFIG_PATH=config.json
 REDIS_READER_SETTINGS='{"redis_url": "...", "storage": "tx88_secrets"}'
 ```
 
 `config.json` must contain `keyPath` (path to RSA private key) and `applicationId`.
+
+Session UUIDs are read at startup from `sessions/<ASPSP_NAME.name.lower()>.json` (e.g. `sessions/santander.json`, `sessions/mbank.json`). Each file must contain a `session_id` field.
 
 ## Architecture
 

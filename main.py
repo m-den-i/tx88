@@ -1,163 +1,126 @@
 import asyncio
 import json
 import uuid
-from datetime import datetime, timezone, timedelta
-from enum import StrEnum
+from datetime import date, datetime, timezone, timedelta
 from pprint import pprint
 from urllib.parse import parse_qs, urlparse
 
-import aiohttp
-from aiohttp import ClientSession
+import click
 
-from app import build_jwt_token
-from server import MBANK_SESSION_UUID, Settings
-
+from app import ASPSP_NAME, Application, BankSession, Settings
+from transaction_converter import TransactionStatus
 
 API_ORIGIN = "https://api.enablebanking.com"
-
-class ASPSP_NAME(StrEnum):
-    SANTANDER = "Santander Bank Polska"
-    MBANK = "mBank"
-    REVOLUT = "Revolut"
-
 ASPSP_COUNTRY = "PL"
 
-SESSION_UUID = MBANK_SESSION_UUID
 
-async def retrieve_account_balances(requests: ClientSession, account_uid: str, base_headers: dict):
-    r = await requests.get(f"{API_ORIGIN}/accounts/{account_uid}/balances", headers=base_headers)
-    if r.status == 200:
-        print("Balances:")
-        pprint(await r.json())
-    else:
-        print(f"Error response {r.status}:", (await r.text()))
-        return
+# ---------------------------------------------------------------------------
+# Core async functions
+# ---------------------------------------------------------------------------
+
+async def _list_asps(country: str):
+    settings = await Settings.load()
+    async with Application(settings) as client:
+        pprint(await client.list_asps(country))
 
 
-async def retrieve_account_transactions(requests: ClientSession, account_uid: str, base_headers: dict, last_days: int = 7):
-    now = datetime.now(timezone.utc)
-    query = {
-        "date_from": (now - timedelta(days=last_days)).date().isoformat(),
-        "transaction_status": "HOLD",
-    }
-    continuation_key = None
-    ind = -1
-    while True:
-        ind += 1
-        if continuation_key:
-            query["continuation_key"] = continuation_key
-        r = await requests.get(
-            f"{API_ORIGIN}/accounts/{account_uid}/transactions",
-            params=query,
-            headers=base_headers,
+async def _create_session(aspsp: ASPSP_NAME):
+    settings = await Settings.load()
+    async with Application(settings) as client:
+        app_data = await client.get_application()
+        auth_url = await client.start_auth(
+            aspsp=aspsp,
+            country=ASPSP_COUNTRY,
+            redirect_url=app_data["redirect_urls"][0],
+            state=str(uuid.uuid4()),
+            access_until=(datetime.now(timezone.utc) + timedelta(days=90)).isoformat(),
         )
-        if r.status == 200:
-            resp_data = await r.json()
-            with open(f"resp_{now.isoformat()}_{account_uid}_{ind}.json", "wt") as f:
-                json.dump(resp_data, f, indent=4)
-            print(f"Transactions: {len(resp_data['transactions'])} items")
-            continuation_key = resp_data.get("continuation_key")
-            if not continuation_key:
-                print("No continuation key. All transactions were fetched")
-                break
-            print(f"Going to fetch more transactions with continuation key {continuation_key}")
-        else:
-            print(f"Error response {r.status}:", (await r.text()))
-            return
-
-async def list_asps(aspsp_country: str, requests: ClientSession, base_headers: dict):
-    # Requesting available ASPSPs
-    r = await requests.get(f"{API_ORIGIN}/aspsps", headers=base_headers)
-    if r.status == 200:
-        print("Available ASPSPs:")
-        result = (await r.json())["aspsps"]
-        filtered = [r for r in result if r["country"] == aspsp_country]
-        pprint(filtered)
-    else:
-        print(f"Error response {r.status}:", (await r.text()))
-        return
+        click.echo(f"Open this URL to authenticate:\n{auth_url}")
+        redirected_url = click.prompt("Paste the URL you were redirected to")
+        auth_code = parse_qs(urlparse(redirected_url).query)["code"][0]
+        session_data = await client.complete_session(auth_code)
+    path = f"sessions/{aspsp.name.lower()}.json"
+    with open(path, "wt") as f:
+        json.dump(session_data, f, indent=4)
+    click.echo(f"Session saved to {path}")
+    pprint(session_data)
 
 
-async def create_session(aspsp: ASPSP_NAME, requests: ClientSession, base_headers: dict):
-    # Requesting application details
-    r = await requests.get(f"{API_ORIGIN}/application", headers=base_headers)
-    if r.status == 200:
-        app = await r.json()
-        print("Application details:")
-        pprint(app)
-    else:
-        print(f"Error response {r.status}:", (await r.text()))
-        return
-
-    # # Starting authorization
-    body = {
-        "access": {
-            "valid_until": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
-        },
-        "aspsp": {"name": aspsp.value, "country": ASPSP_COUNTRY},
-        "state": str(uuid.uuid4()),
-        "redirect_url": app["redirect_urls"][0],
-        "psu_type": "personal",
-    }
-    r = await requests.post(f"{API_ORIGIN}/auth", json=body, headers=base_headers)
-    if r.status == 200:
-        auth_url = (await r.json())["url"]
-        print(f"To authenticate open URL {auth_url}")
-    else:
-        print(f"Error response {r.status}:", await r.text())
-        return
-
-    # Reading auth code and creating user session
-    redirected_url = input("Paste here the URL you have been redirected to: ")
-    auth_code = parse_qs(urlparse(redirected_url).query)["code"][0]
-    r = await requests.post(f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=base_headers)
-    if r.status == 200:
-        session = await r.json()
-        with open(f"sessions/{aspsp.name.lower()}.json", "wt") as f:
-            json.dump(session, f, indent=4)
-        print("New user session has been created:")
-        pprint(session)
-    else:
-        print(f"Error response {r.status}:", r.text)
-        return
+async def _show_session(aspsp: ASPSP_NAME):
+    settings = await Settings.load()
+    bank_session = BankSession.load(aspsp)
+    async with Application(settings, bank_session.session_id) as client:
+        session = await client.get_session()
+        click.echo(f"Accounts: {session.accounts}")
+        for b in await client.get_account_balances(session):
+            click.echo(f"Balances for {b['account_uid']}:")
+            pprint(b["balances"])
 
 
-async def run():
-    settings = await Settings.load(MBANK_SESSION_UUID)
-    base_headers = {"Authorization": f"Bearer {build_jwt_token(settings)}"}
-
-    async with aiohttp.ClientSession() as requests:
-        r = await requests.get(f"{API_ORIGIN}/sessions/{settings.session_uuid}", headers=base_headers)
-
-        if r.status == 200:
-            print("Stored session data:")
-            session = await r.json()
-            pprint(session)
-        else:
-            print(f"Error response {r.status}:", await r.text())
-            return
-
-        # Using the first available account for the following API calls
-        for account_uid in session["accounts"]:
-            await retrieve_account_balances(requests, account_uid, base_headers)
-            # await retrieve_account_transactions(requests, account_uid, base_headers)
+async def _transactions(aspsp: ASPSP_NAME, date_from: str | None, date_to: str | None, status: str):
+    today = date.today()
+    eff_from = date_from or (today - timedelta(days=7)).isoformat()
+    eff_to = date_to or today.isoformat()
+    settings = await Settings.load()
+    bank_session = BankSession.load(aspsp)
+    async with Application(settings, bank_session.session_id) as client:
+        session = await client.get_session()
+        for account_uid in session.accounts:
+            txns = await client.get_account_transactions(
+                account_uid, TransactionStatus(status), eff_from, eff_to
+            )
+            click.echo(f"Transactions for {account_uid} ({len(txns)} items):")
+            pprint([t.model_dump() for t in txns])
 
 
-    print("All done!")
+# ---------------------------------------------------------------------------
+# CLI commands
+# ---------------------------------------------------------------------------
+
+ASPSP_CHOICES = click.Choice([a.name for a in ASPSP_NAME], case_sensitive=False)
 
 
-async def run_create_session(aspsp: ASPSP_NAME):
-    settings = await Settings.load(MBANK_SESSION_UUID)
-    async with aiohttp.ClientSession() as requests:
-        await create_session(aspsp, requests, {"Authorization": f"Bearer {build_jwt_token(settings)}"})
+@click.group()
+def cli():
+    """tx88 management CLI."""
 
-async def run_list_asps(aspsp_country: str):
-    settings = await Settings.load(MBANK_SESSION_UUID)
-    async with aiohttp.ClientSession() as requests:
-        await list_asps(aspsp_country, requests, {"Authorization": f"Bearer {build_jwt_token(settings)}"})
+
+@cli.command("list-asps")
+@click.option("--country", default=ASPSP_COUNTRY, show_default=True, help="Filter by country code.")
+def list_asps(country: str):
+    """List available ASPSPs."""
+    asyncio.run(_list_asps(country))
+
+
+@cli.command("create-session")
+@click.argument("aspsp", type=ASPSP_CHOICES)
+def create_session(aspsp: str):
+    """Create a new bank session and save it to sessions/<ASPSP>.json."""
+    asyncio.run(_create_session(ASPSP_NAME[aspsp.upper()]))
+
+
+@cli.command("show-session")
+@click.argument("aspsp", type=ASPSP_CHOICES)
+def show_session(aspsp: str):
+    """Show session info and account balances for an ASPSP."""
+    asyncio.run(_show_session(ASPSP_NAME[aspsp.upper()]))
+
+
+@cli.command("transactions")
+@click.argument("aspsp", type=ASPSP_CHOICES)
+@click.option("--date-from", default=None, help="Date to fetch from (YYYY-MM-DD). Defaults to 7 days ago.")
+@click.option("--date-to", default=None, help="Date to fetch to (YYYY-MM-DD). Defaults to today.")
+@click.option(
+    "--status",
+    type=click.Choice(["BOOK", "HOLD"], case_sensitive=False),
+    default="BOOK",
+    show_default=True,
+    help="Transaction status filter.",
+)
+def transactions(aspsp: str, date_from: str | None, date_to: str | None, status: str):
+    """Fetch transactions for an ASPSP."""
+    asyncio.run(_transactions(ASPSP_NAME[aspsp.upper()], date_from, date_to, status.upper()))
 
 
 if __name__ == "__main__":
-    # asyncio.run(run_create_session(ASPSP_NAME.MBANK))
-    # asyncio.run(run_list_asps(ASPSP_COUNTRY))
-    asyncio.run(run())
+    cli()

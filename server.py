@@ -1,9 +1,7 @@
 import logging
-import os
 import random
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID
 
 import aiohttp
@@ -11,7 +9,7 @@ from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
-from app import Application, Settings, AccountTransactionsResponse
+from app import Application, Settings, BankSession, AccountTransactionsResponse, ASPSP_NAME
 from transaction_converter import TransactionStatus
 
 IPIFY_URL = "https://api.ipify.org"
@@ -24,14 +22,10 @@ PSU_USER_AGENTS = [
 logger = logging.getLogger("tx88.server")
 logging.basicConfig(level=logging.INFO)
 
-# Required env vars
-SANTANDER_SESSION_UUID = os.environ["SANTANDER_SESSION_UUID"]
-MBANK_SESSION_UUID = os.environ["MBANK_SESSION_UUID"]
-
-# Module-level settings object will be assigned in lifespan
-santander_settings: Optional[Settings] = None
-mbank_settings: Optional[Settings] = None
-public_ip: Optional[str] = None
+# Module-level globals assigned in lifespan
+settings: Settings
+bank_sessions: dict[ASPSP_NAME, BankSession] = {}
+public_ip: str = ""
 
 
 async def _fetch_public_ip() -> str:
@@ -41,14 +35,13 @@ async def _fetch_public_ip() -> str:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    global santander_settings
-    global mbank_settings
-    global public_ip
-    santander_settings = await Settings.load(SANTANDER_SESSION_UUID)
-    mbank_settings = await Settings.load(MBANK_SESSION_UUID)
-    for settings in (santander_settings, mbank_settings):
-        logger.info("Settings loaded: application_id=%s session_uuid=%s", settings.application_id, settings.session_uuid)
+async def lifespan(_app: FastAPI):
+    global settings, bank_sessions, public_ip
+    settings = await Settings.load()
+    logger.info("Settings loaded: application_id=%s", settings.application_id)
+    bank_sessions = {aspsp: BankSession.load(aspsp) for aspsp in (ASPSP_NAME.SANTANDER, ASPSP_NAME.MBANK)}
+    for aspsp, bs in bank_sessions.items():
+        logger.info("Session loaded: aspsp=%s session_id=%s", aspsp.name, bs.session_id)
     public_ip = await _fetch_public_ip()
     logger.info("Detected public IP: %s", public_ip)
     yield
@@ -99,7 +92,7 @@ def _date_range_or_defaults(
 
 @app.get("/santander-balance")
 async def santander_balance():
-    async with Application(santander_settings, extra_headers=_psu_headers()) as client:
+    async with Application(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
         session = await client.get_session()
         results = await client.get_account_balances(session)
     return AccountsResponse.from_eb_accounts(results)
@@ -107,7 +100,7 @@ async def santander_balance():
 
 @app.get("/mbank-balance")
 async def mbank_balance():
-    async with Application(mbank_settings) as client:
+    async with Application(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
         session = await client.get_session()
         results = await client.get_account_balances(session)
     return AccountsResponse.from_eb_accounts(results)
@@ -119,7 +112,7 @@ async def santander_card_blockades(
     date_to: str | None = Query(default=None, description="Date to fetch blockades to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(santander_settings, extra_headers=_psu_headers()) as client:
+    async with Application(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,
@@ -136,7 +129,7 @@ async def mbank_card_blockades(
     date_to: str | None = Query(default=None, description="Date to fetch blockades to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(mbank_settings) as client:
+    async with Application(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,
@@ -153,7 +146,7 @@ async def santander_transactions(
     date_to: str | None = Query(default=None, description="Date to fetch transactions to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(santander_settings, extra_headers=_psu_headers()) as client:
+    async with Application(settings, bank_sessions[ASPSP_NAME.SANTANDER].session_id, extra_headers=_psu_headers()) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,
@@ -170,7 +163,7 @@ async def mbank_transactions(
     date_to: str | None = Query(default=None, description="Date to fetch transactions to (YYYY-MM-DD)"),
 ):
     eff_from, eff_to = _date_range_or_defaults(date_from, date_to)
-    async with Application(mbank_settings) as client:
+    async with Application(settings, bank_sessions[ASPSP_NAME.MBANK].session_id) as client:
         session = await client.get_session()
         accounts = await client.get_all_transactions(
             session,

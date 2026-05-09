@@ -1,12 +1,13 @@
+import importlib
+import json
 import os
 import sys
-import json
+from unittest.mock import patch
 
 import pytest
 from aioresponses import aioresponses
 from httpx import AsyncClient, ASGITransport
 
-# Ensure tests can import server after env vars are set
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
@@ -15,52 +16,46 @@ SESSION_FIXTURE = os.path.join(ROOT, "fixtures", "session.json")
 BALANCES_FIXTURE = os.path.join(ROOT, "fixtures", "balances.json")
 CONFIG_PATH = os.path.join(ROOT, "config.json")
 
+SANTANDER_UUID = "test-santander-uuid"
+MBANK_UUID = "test-mbank-uuid"
+
+
+def _mock_bank_session(aspsp):
+    from app import BankSession, ASPSP_NAME
+    bs = BankSession.__new__(BankSession)
+    bs.session_id = SANTANDER_UUID if aspsp == ASPSP_NAME.SANTANDER else MBANK_UUID
+    return bs
+
+
 @pytest.mark.asyncio
 async def test_santander_balance_handler(monkeypatch):
-    # Arrange: set env vars for config and session uuid
-    monkeypatch.setenv("SANTANDER_CONFIG_PATH", CONFIG_PATH)
+    monkeypatch.setenv("CONFIG_PATH", CONFIG_PATH)
 
-    # load session fixture
     with open(SESSION_FIXTURE, "r", encoding="utf-8") as f:
         session_data = json.load(f)
-    session_uuid = "test-session-uuid"
-    monkeypatch.setenv("SANTANDER_SESSION_UUID", session_uuid)
-    monkeypatch.setenv("MBANK_SESSION_UUID", "test-mbank-uuid")
+    with open(BALANCES_FIXTURE, "r", encoding="utf-8") as f:
+        balances_data = json.load(f)
 
-    # Start aioresponses to mock external API calls
-    with aioresponses() as mocked:
+    with aioresponses() as mocked, patch("app.BankSession.load", side_effect=_mock_bank_session):
         mocked.get("https://api.ipify.org", body="1.2.3.4")
-        # Mock sessions/{session_uuid} to return session fixture
-        mocked.get(f"https://api.enablebanking.com/sessions/{session_uuid}", payload=session_data)
+        mocked.get(f"https://api.enablebanking.com/sessions/{SANTANDER_UUID}", payload=session_data)
 
-        # Mock balances endpoint for all accounts in session fixture
         accounts = session_data["accounts"]
-        with open(BALANCES_FIXTURE, "r", encoding="utf-8") as f:
-            balances_data = json.load(f)
         for acct in accounts:
             mocked.get(f"https://api.enablebanking.com/accounts/{acct}/balances", payload=balances_data)
 
-        # Import app after env vars and mocks are in place
-        import importlib
-        server = importlib.import_module("server")
+        import server
         importlib.reload(server)
 
-        app = server.app
-
-        # Explicitly enter the lifespan context to populate settings
-        ctx = server.lifespan(app)
+        ctx = server.lifespan(server.app)
         await ctx.__aenter__()
 
-        transport = ASGITransport(app=app)
+        transport = ASGITransport(app=server.app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
-            # Act
             resp = await ac.get("/santander-balance")
-            # Assert
             assert resp.status_code == 200
             data = resp.json()
             assert data["accounts"][0]["balance"] == balances_data["balances"][1]["balance_amount"]["amount"]
             assert data["accounts"][1]["balance"] == balances_data["balances"][1]["balance_amount"]["amount"]
 
-        # Exit lifespan
         await ctx.__aexit__(None, None, None)
-    print(data)

@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
 import logging
 import os
 import time
+from enum import StrEnum
 from typing import List
 from uuid import UUID
 
@@ -15,6 +18,13 @@ from pydantic import BaseModel
 from transaction_converter import Transaction, TransactionStatus
 
 API_ORIGIN = "https://api.enablebanking.com"
+SESSIONS_DIR = os.path.join(os.path.dirname(__file__), "sessions")
+
+
+class ASPSP_NAME(StrEnum):
+    SANTANDER = "Santander Bank Polska"
+    MBANK = "mBank"
+    REVOLUT = "Revolut"
 
 
 class ConfigModel(BaseModel):
@@ -23,17 +33,16 @@ class ConfigModel(BaseModel):
 
 
 class Settings:
-    """Holds application configuration loaded from files."""
+    """Holds common application configuration loaded from config file."""
 
-    def __init__(self, application_id: str, app_private_key: str, session_uuid: str):
+    def __init__(self, application_id: str, app_private_key: str):
         self.application_id: str = application_id
         self.app_private_key: str = app_private_key
-        self.session_uuid: str = session_uuid
 
     @classmethod
-    async def load(cls, session_uuid: str, config_path: str | None = None) -> "Settings":
+    async def load(cls, config_path: str | None = None) -> Settings:
         if config_path is None:
-            config_path = os.environ["SANTANDER_CONFIG_PATH"]
+            config_path = os.environ["CONFIG_PATH"]
         with open(config_path, "rt", encoding="utf-8") as f:
             cfg_data = json.load(f)
         cfg = ConfigModel.model_validate(cfg_data)
@@ -45,8 +54,21 @@ class Settings:
         return cls(
             application_id=cfg.applicationId,
             app_private_key=private_key,
-            session_uuid=session_uuid,
         )
+
+
+class BankSession:
+    """Holds a per-bank session UUID loaded from the sessions directory."""
+
+    def __init__(self, session_id: str):
+        self.session_id: str = session_id
+
+    @classmethod
+    def load(cls, aspsp: ASPSP_NAME) -> BankSession:
+        path = os.path.join(SESSIONS_DIR, f"{aspsp.name.lower()}.json")
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return cls(session_id=data["session_id"])
 
 
 class SessionResponseModel(BaseModel):
@@ -89,8 +111,9 @@ def build_jwt_token(settings: Settings) -> str:
 
 
 class Application:
-    def __init__(self, settings: Settings, extra_headers: dict | None = None):
+    def __init__(self, settings: Settings, session_uuid: str | None = None, extra_headers: dict | None = None):
         self.settings = settings
+        self.session_uuid = session_uuid
         self.headers = {"Authorization": f"Bearer {build_jwt_token(settings)}", **(extra_headers or {})}
 
     async def __aenter__(self):
@@ -100,8 +123,56 @@ class Application:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self.client.close()
 
+    # ------------------------------------------------------------------
+    # Management operations (no session_uuid required)
+    # ------------------------------------------------------------------
+
+    async def list_asps(self, country: str) -> list[dict]:
+        async with self.client.get(f"{API_ORIGIN}/aspsps", headers=self.headers) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
+            data = await resp.json()
+        return [a for a in data["aspsps"] if a["country"] == country]
+
+    async def get_application(self) -> dict:
+        async with self.client.get(f"{API_ORIGIN}/application", headers=self.headers) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
+            return await resp.json()
+
+    async def start_auth(
+        self,
+        aspsp: ASPSP_NAME,
+        country: str,
+        redirect_url: str,
+        state: str,
+        access_until: str,
+    ) -> str:
+        body = {
+            "access": {"valid_until": access_until},
+            "aspsp": {"name": aspsp.value, "country": country},
+            "state": state,
+            "redirect_url": redirect_url,
+            "psu_type": "personal",
+        }
+        async with self.client.post(f"{API_ORIGIN}/auth", json=body, headers=self.headers) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
+            data = await resp.json()
+        return data["url"]
+
+    async def complete_session(self, auth_code: str) -> dict:
+        async with self.client.post(f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=self.headers) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
+            return await resp.json()
+
+    # ------------------------------------------------------------------
+    # Session operations (session_uuid required)
+    # ------------------------------------------------------------------
+
     async def get_session(self) -> SessionResponseModel:
-        async with self.client.get(f"{API_ORIGIN}/sessions/{self.settings.session_uuid}", headers=self.headers) as resp:
+        async with self.client.get(f"{API_ORIGIN}/sessions/{self.session_uuid}", headers=self.headers) as resp:
             if resp.status != 200:
                 text = await resp.text()
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
