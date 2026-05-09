@@ -2,9 +2,17 @@ from __future__ import annotations
 
 import csv
 import io
+from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel
+
+
+class TransactionStatus(str, Enum):
+    BOOK = "BOOK"
+    PDNG = "PDNG"
+    HOLD = "HOLD"
+    INFO = "INFO"
 
 
 # --- Sub-schemas ---
@@ -89,8 +97,8 @@ class Transaction(BaseModel):
     debtor_agent: Optional[FinancialInstitutionIdentification] = None
     bank_transaction_code: Optional[BankTransactionCode] = None
     credit_debit_indicator: str
-    status: str
-    booking_date: str
+    status: TransactionStatus
+    booking_date: Optional[str] = None
     value_date: Optional[str] = None
     transaction_date: Optional[str] = None
     balance_after_transaction: Optional[AmountType] = None

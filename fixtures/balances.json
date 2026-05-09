@@ -1,0 +1,26 @@
+{
+  "balances": [
+    {
+      "balance_amount": {
+        "amount": "-8746.13",
+        "currency": "PLN"
+      },
+      "balance_type": "ITBD",
+      "last_change_date_time": null,
+      "last_committed_transaction": null,
+      "name": "Interim booked balance",
+      "reference_date": null
+    },
+    {
+      "balance_amount": {
+        "amount": "10000.02",
+        "currency": "PLN"
+      },
+      "balance_type": "ITAV",
+      "last_change_date_time": null,
+      "last_committed_transaction": null,
+      "name": "Interim available balance",
+      "reference_date": null
+    }
+  ]
+}

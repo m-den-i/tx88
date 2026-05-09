@@ -2,16 +2,24 @@ import asyncio
 import json
 import uuid
 from datetime import datetime, timezone, timedelta
+from enum import StrEnum
 from pprint import pprint
 from urllib.parse import parse_qs, urlparse
 
 import aiohttp
 from aiohttp import ClientSession
 
-from server import MBANK_SESSION_UUID, build_jwt_token, Settings, SANTANDER_SESSION_UUID
+from app import build_jwt_token
+from server import MBANK_SESSION_UUID, Settings
+
 
 API_ORIGIN = "https://api.enablebanking.com"
-ASPSP_NAME = "Santander Bank Polska"
+
+class ASPSP_NAME(StrEnum):
+    SANTANDER = "Santander Bank Polska"
+    MBANK = "mBank"
+    REVOLUT = "Revolut"
+
 ASPSP_COUNTRY = "PL"
 
 SESSION_UUID = MBANK_SESSION_UUID
@@ -57,8 +65,20 @@ async def retrieve_account_transactions(requests: ClientSession, account_uid: st
             print(f"Error response {r.status}:", (await r.text()))
             return
 
+async def list_asps(aspsp_country: str, requests: ClientSession, base_headers: dict):
+    # Requesting available ASPSPs
+    r = await requests.get(f"{API_ORIGIN}/aspsps", headers=base_headers)
+    if r.status == 200:
+        print("Available ASPSPs:")
+        result = (await r.json())["aspsps"]
+        filtered = [r for r in result if r["country"] == aspsp_country]
+        pprint(filtered)
+    else:
+        print(f"Error response {r.status}:", (await r.text()))
+        return
 
-async def create_session(requests: ClientSession, base_headers: dict):
+
+async def create_session(aspsp: ASPSP_NAME, requests: ClientSession, base_headers: dict):
     # Requesting application details
     r = await requests.get(f"{API_ORIGIN}/application", headers=base_headers)
     if r.status == 200:
@@ -69,21 +89,12 @@ async def create_session(requests: ClientSession, base_headers: dict):
         print(f"Error response {r.status}:", (await r.text()))
         return
 
-    # # Requesting available ASPSPs
-    # r = requests.get(f"{API_ORIGIN}/aspsps", headers=base_headers)
-    # if r.status_code == 200:
-    #     print("Available ASPSPs:")
-    #     # pprint(r.json()["aspsps"])
-    # else:
-    #     print(f"Error response {r.status_code}:", r.text)
-    #     return
-    #
     # # Starting authorization
     body = {
         "access": {
             "valid_until": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
         },
-        "aspsp": {"name": ASPSP_NAME, "country": ASPSP_COUNTRY},
+        "aspsp": {"name": aspsp.value, "country": ASPSP_COUNTRY},
         "state": str(uuid.uuid4()),
         "redirect_url": app["redirect_urls"][0],
         "psu_type": "personal",
@@ -93,7 +104,7 @@ async def create_session(requests: ClientSession, base_headers: dict):
         auth_url = (await r.json())["url"]
         print(f"To authenticate open URL {auth_url}")
     else:
-        print(f"Error response {r.status}:", r.text)
+        print(f"Error response {r.status}:", await r.text())
         return
 
     # Reading auth code and creating user session
@@ -102,7 +113,7 @@ async def create_session(requests: ClientSession, base_headers: dict):
     r = await requests.post(f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=base_headers)
     if r.status == 200:
         session = await r.json()
-        with open("mbank_session_last.json", "wt") as f:
+        with open(f"sessions/{aspsp.name.lower()}.json", "wt") as f:
             json.dump(session, f, indent=4)
         print("New user session has been created:")
         pprint(session)
@@ -111,7 +122,7 @@ async def create_session(requests: ClientSession, base_headers: dict):
         return
 
 
-async def main():
+async def run():
     settings = await Settings.load(MBANK_SESSION_UUID)
     base_headers = {"Authorization": f"Bearer {build_jwt_token(settings)}"}
 
@@ -123,17 +134,30 @@ async def main():
             session = await r.json()
             pprint(session)
         else:
-            print(f"Error response {r.status}:", r.text)
+            print(f"Error response {r.status}:", await r.text())
             return
 
         # Using the first available account for the following API calls
         for account_uid in session["accounts"]:
-            # await retrieve_account_balances(requests, account_uid, base_headers)
-            await retrieve_account_transactions(requests, account_uid, base_headers)
+            await retrieve_account_balances(requests, account_uid, base_headers)
+            # await retrieve_account_transactions(requests, account_uid, base_headers)
 
 
     print("All done!")
 
 
+async def run_create_session(aspsp: ASPSP_NAME):
+    settings = await Settings.load(MBANK_SESSION_UUID)
+    async with aiohttp.ClientSession() as requests:
+        await create_session(aspsp, requests, {"Authorization": f"Bearer {build_jwt_token(settings)}"})
+
+async def run_list_asps(aspsp_country: str):
+    settings = await Settings.load(MBANK_SESSION_UUID)
+    async with aiohttp.ClientSession() as requests:
+        await list_asps(aspsp_country, requests, {"Authorization": f"Bearer {build_jwt_token(settings)}"})
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(run_create_session(ASPSP_NAME.MBANK))
+    # asyncio.run(run_list_asps(ASPSP_COUNTRY))
+    asyncio.run(run())

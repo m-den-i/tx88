@@ -22,7 +22,7 @@ ROOT = os.path.dirname(HERE)
 FIXTURE = os.path.join(
     ROOT,
     "fixtures",
-    "resp_2026-03-01T13:54:53.669455+00:00_c64d31e3-9204-42ee-ab66-1fac9cdef5ff_0.json",
+    "transactions.json",
 )
 CSV_COMPARE = os.path.join(ROOT, "tests", "test.csv")
 MINIMAL = {

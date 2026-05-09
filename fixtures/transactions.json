@@ -1,0 +1,1385 @@
+{
+    "transactions": [
+        {
+            "entry_reference": "2026-02-27/39701992459/1414522671",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "12.99"
+            },
+            "creditor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "creditor_agent": null,
+            "debtor": {
+                "name": "MERCH_EA278FB7",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": null,
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "CRDT",
+            "status": "BOOK",
+            "booking_date": "2026-02-27",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_09CB5007"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-27/39701837955/1414481215",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "15.49"
+            },
+            "creditor": {
+                "name": "MERCH_A045C6A9",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-27",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_CD934F33"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-27/39701635232/1414440500",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "50.00"
+            },
+            "creditor": {
+                "name": "MERCH_8F8909B3",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-27",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_DEC10B75"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-27/39701515671/1414432208",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "22.88"
+            },
+            "creditor": {
+                "name": "MERCH_94803CEC",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-27",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_EE17BA8E"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-27/39701518331/1414429344",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "120.00"
+            },
+            "creditor": {
+                "name": "MERCH_50E421E0",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-27",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_B926FB7F"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39696864135/1414308531",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "503.30"
+            },
+            "creditor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "creditor_agent": null,
+            "debtor": {
+                "name": "MERCH_F3D81600",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": null,
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "CRDT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_F5874074"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39682320559/1414184716",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "197.38"
+            },
+            "creditor": {
+                "name": "MERCH_AE491F50",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_466E0762"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39682287816/1414168442",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "12.99"
+            },
+            "creditor": {
+                "name": "MERCH_8573F4CE",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_28B304CC"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39682182250/1414152975",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "55.50"
+            },
+            "creditor": {
+                "name": "MERCH_7BEA1592",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_B4F63842"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39681956157/1414114193",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "35.00"
+            },
+            "creditor": {
+                "name": "MERCH_A3B6D020",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_497DB9BE"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39681931447/1414091273",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "81.00"
+            },
+            "creditor": {
+                "name": "MERCH_8F8909B3",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_DEC10B75"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-26/39681835898/1414058275",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "13.90"
+            },
+            "creditor": {
+                "name": "MERCH_94803CEC",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-26",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_EE17BA8E"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-25/39636583367/1413841630",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "480.00"
+            },
+            "creditor": {
+                "name": "MERCH_DC019359",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-25",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_49598B7F"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-25/39662522071/1413728666",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "205.06"
+            },
+            "creditor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "creditor_agent": null,
+            "debtor": {
+                "name": "MERCH_2A0B81A8",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": null,
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "CRDT",
+            "status": "BOOK",
+            "booking_date": "2026-02-25",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_24DCACFE"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-24/39644991825/1413516993",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "65.90"
+            },
+            "creditor": {
+                "name": "MERCH_BAFE9A82",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-24",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_23A247A1"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-24/39644836639/1413458917",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "25.47"
+            },
+            "creditor": {
+                "name": "MERCH_1ADF97FA",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-24",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_34DE9CD2"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-24/39644836632/1413458915",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "9.98"
+            },
+            "creditor": {
+                "name": "MERCH_1ADF97FA",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-24",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_34DE9CD2"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-23/39615256224/1412977467",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "100.00"
+            },
+            "creditor": {
+                "name": "MERCH_BE168EAF",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-23",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_85F0C437"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-23/39614863430/1412875180",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "48.67"
+            },
+            "creditor": {
+                "name": "MERCH_E7A234D4",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-23",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_3EA4F366"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-23/39601157634/1412611886",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "133.83"
+            },
+            "creditor": {
+                "name": "MERCH_22B23AE5",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-23",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_EC4DF90F"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-23/39600944232/1412602760",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "1.72"
+            },
+            "creditor": {
+                "name": "MERCH_9446A167",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-23",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_5003AA4A"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-23/39600765558/1412575123",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "12.77"
+            },
+            "creditor": {
+                "name": "MERCH_ACDE172C",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-23",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_A75FCF1F"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        },
+        {
+            "entry_reference": "2026-02-23/39600765986/1412560394",
+            "merchant_category_code": null,
+            "transaction_amount": {
+                "currency": "PLN",
+                "amount": "37.69"
+            },
+            "creditor": {
+                "name": "MERCH_9E42041F",
+                "postal_address": null,
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "creditor_account": null,
+            "creditor_agent": null,
+            "debtor": {
+                "name": "USER_28BA822B",
+                "postal_address": {
+                    "address_type": null,
+                    "department": null,
+                    "sub_department": null,
+                    "street_name": null,
+                    "building_number": null,
+                    "post_code": null,
+                    "town_name": null,
+                    "country_sub_division": null,
+                    "country": null,
+                    "address_line": [
+                        "UL. 782F57 0/0",
+                        "00-000 FADD49"
+                    ]
+                },
+                "organisation_id": null,
+                "private_id": null,
+                "contact_details": null
+            },
+            "debtor_account": {
+                "iban": "PL00000000000000000000000000",
+                "other": null
+            },
+            "debtor_agent": null,
+            "bank_transaction_code": null,
+            "credit_debit_indicator": "DBIT",
+            "status": "BOOK",
+            "booking_date": "2026-02-23",
+            "value_date": null,
+            "transaction_date": null,
+            "balance_after_transaction": null,
+            "reference_number": null,
+            "reference_number_schema": null,
+            "remittance_information": [
+                "REMIT_887C84E3"
+            ],
+            "debtor_account_additional_identification": null,
+            "creditor_account_additional_identification": null,
+            "exchange_rate": null,
+            "note": null,
+            "transaction_id": null
+        }
+    ],
+    "continuation_key": null
+}

@@ -25,9 +25,11 @@ async def test_santander_balance_handler(monkeypatch):
         session_data = json.load(f)
     session_uuid = "test-session-uuid"
     monkeypatch.setenv("SANTANDER_SESSION_UUID", session_uuid)
+    monkeypatch.setenv("MBANK_SESSION_UUID", "test-mbank-uuid")
 
     # Start aioresponses to mock external API calls
     with aioresponses() as mocked:
+        mocked.get("https://api.ipify.org", body="1.2.3.4")
         # Mock sessions/{session_uuid} to return session fixture
         mocked.get(f"https://api.enablebanking.com/sessions/{session_uuid}", payload=session_data)
 

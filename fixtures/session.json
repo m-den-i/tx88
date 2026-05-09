@@ -1,0 +1,44 @@
+{
+  "access": {
+    "accounts": null,
+    "balances": true,
+    "transactions": true,
+    "valid_until": "2026-05-16T19:29:08Z"
+  },
+  "accounts": [
+    "01a62cff-7f2f-49d4-9884-ef91de4649a7",
+    "f1f2fbf8-cdb9-4e36-95a8-a1cf808b9b20"
+  ],
+  "accounts_data": [
+    {
+      "identification_hash": "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA==.j4Yh6QjSbUDp/lbsrN+3y2Mxi2BtUkQzWJoro/Lnd0k=",
+      "identification_hashes": [
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA===",
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA==.j4Yh6QjSbUDp/lbsrN+3y2Mxi2BtUkQzWJoro/Lnd0k=",
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA===.ounWFw27XHALfa3o6xsHHnOadlhPeVnmZRXBzwmKBtA=",
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA====.7VNGhZJZ5YSH8kvji/r1RP2Ei72pSW55kOrL+n4pOYI="
+      ],
+      "uid": "01a62cff-7f2f-49d4-9884-ef91de4649a7"
+    },
+    {
+      "identification_hash": "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA==.Kq9zTLmAjpE4XtD8Sks+Zv9nhpz9Q8zXWw8vbSi5N8E=",
+      "identification_hashes": [
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA==.8/VUuvY53vAH0+q4Hqs+ztx19TqsUd28ZR2QLXTxw4s=",
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA==.Kq9zTLmAjpE4XtD8Sks+Zv9nhpz9Q8zXWw8vbSi5N8E=",
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA===.zC0afZfjO9pIoKc7+sB58jPckDeiLNcbdt65VuTFOQY=",
+        "5kpBLjqHYQEnptNdZq7Ya+RFvpTyPtbWxxDyA304z1e0DIhzK28GXFzSLLcPUQz9nEl4gom9+MqVjfMXNkdPRA====.7VNGhZJZ5YSH8kvji/r1RP2Ei72pSW55kOrL+n4pOYI="
+      ],
+      "uid": "f1f2fbf8-cdb9-4e36-95a8-a1cf808b9b20"
+    }
+  ],
+  "aspsp": {
+    "country": "PL",
+    "name": "mBank"
+  },
+  "authorized": "2026-02-15T20:30:12.592703Z",
+  "closed": null,
+  "created": "2026-02-15T20:29:09.050366Z",
+  "psu_id_hash": "38062206a79d8dcfa5d3b3eba13f95c6c44a0cb5",
+  "psu_type": "personal",
+  "status": "AUTHORIZED"
+}

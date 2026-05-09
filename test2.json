@@ -1,0 +1,109 @@
+{
+  "accounts": [
+    {
+      "account_uid": "31122419-5c35-4bed-b64d-e182759fc9c6",
+      "transactions": []
+    },
+    {
+      "account_uid": "bfd09296-e266-4441-a5a1-038071374be8",
+      "transactions": [
+        {
+          "entry_reference": "H113",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "PLN",
+            "amount": "139.64"
+          },
+          "creditor": null,
+          "creditor_account": null,
+          "creditor_agent": null,
+          "debtor": null,
+          "debtor_account": null,
+          "debtor_agent": null,
+          "bank_transaction_code": null,
+          "credit_debit_indicator": "DBIT",
+          "status": "HOLD",
+          "booking_date": null,
+          "value_date": null,
+          "transaction_date": "2026-04-11",
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "reference_number_schema": null,
+          "remittance_information": [
+            "CARREFOUR",
+            "ZAKUP PRZY UŻYCIU KARTY W KRAJU"
+          ],
+          "debtor_account_additional_identification": null,
+          "creditor_account_additional_identification": null,
+          "exchange_rate": null,
+          "note": null,
+          "transaction_id": "SDExMw"
+        },
+        {
+          "entry_reference": "H114",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "PLN",
+            "amount": "819.96"
+          },
+          "creditor": null,
+          "creditor_account": null,
+          "creditor_agent": null,
+          "debtor": null,
+          "debtor_account": null,
+          "debtor_agent": null,
+          "bank_transaction_code": null,
+          "credit_debit_indicator": "DBIT",
+          "status": "HOLD",
+          "booking_date": null,
+          "value_date": null,
+          "transaction_date": "2026-04-12",
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "reference_number_schema": null,
+          "remittance_information": [
+            "eobuwie.com.pl",
+            "ZAKUP PRZY UŻYCIU KARTY - INTERNET"
+          ],
+          "debtor_account_additional_identification": null,
+          "creditor_account_additional_identification": null,
+          "exchange_rate": null,
+          "note": null,
+          "transaction_id": "SDExNA"
+        },
+        {
+          "entry_reference": "H115",
+          "merchant_category_code": null,
+          "transaction_amount": {
+            "currency": "PLN",
+            "amount": "510.50"
+          },
+          "creditor": null,
+          "creditor_account": null,
+          "creditor_agent": null,
+          "debtor": null,
+          "debtor_account": null,
+          "debtor_agent": null,
+          "bank_transaction_code": null,
+          "credit_debit_indicator": "DBIT",
+          "status": "HOLD",
+          "booking_date": null,
+          "value_date": null,
+          "transaction_date": "2026-04-12",
+          "balance_after_transaction": null,
+          "reference_number": null,
+          "reference_number_schema": null,
+          "remittance_information": [
+            "UNIQLO EUROPE LTD",
+            "ZAKUP PRZY UŻYCIU KARTY - INTERNET"
+          ],
+          "debtor_account_additional_identification": null,
+          "creditor_account_additional_identification": null,
+          "exchange_rate": null,
+          "note": null,
+          "transaction_id": "SDExNQ"
+        }
+      ]
+    }
+  ]
+}
