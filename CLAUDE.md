@@ -46,6 +46,8 @@ Session UUIDs are read at startup from `sessions/<ASPSP_NAME.name.lower()>.json`
 
 **Lifespan**: `settings: Settings`, `bank_sessions: dict[ASPSP_NAME, BankSession]`, and `public_ip: str` are module-level globals populated at startup via `@asynccontextmanager lifespan`.
 
+**PSU headers**: `BankSessionClient.__aenter__` injects `Psu-Ip-Address` (server public IP from ipify) and `Psu-User-Agent` (rotated from `PSU_USER_AGENTS`) on every session-bound call. PSU = Payment Service User; under PSD2 these headers attest end-user context to the ASPSP and feed its SCA / fraud-decision logic. Several ASPSPs list them in `required_psu_headers` and reject calls without them (`PSU_HEADER_NOT_PROVIDED`). They apply only to session-scoped endpoints (`/sessions/{id}`, `/accounts/{id}/...`) — not to `/auth`, `POST /sessions`, `/aspsps`, `/application`, which is why `EnableBankingClient` does not set them and only `BankSessionClient` does. Headers must be truthful: do not fabricate IPs or UAs per request, do not send stale values on background fetches when no PSU is present.
+
 **Transaction converter**: `TransactionConverter.to_csv()` flattens nested Pydantic models recursively — lists use only the first item.
 
 ## Code Conventions

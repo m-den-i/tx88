@@ -986,6 +986,106 @@ components:
         error_description:
           type: string
 
+  parameters:
+    PsuIpAddress:
+      name: Psu-Ip-Address
+      in: header
+      schema:
+        type: string
+      description: "PSU IP address"
+    PsuUserAgent:
+      name: Psu-User-Agent
+      in: header
+      schema:
+        type: string
+      description: "PSU browser User-Agent"
+    PsuReferer:
+      name: Psu-Referer
+      in: header
+      schema:
+        type: string
+      description: "PSU Referer"
+    PsuAccept:
+      name: Psu-Accept
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept header"
+    PsuAcceptCharset:
+      name: Psu-Accept-Charset
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept-Charset"
+    PsuAcceptEncoding:
+      name: Psu-Accept-Encoding
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept-Encoding"
+    PsuAcceptLanguage:
+      name: Psu-Accept-language
+      in: header
+      schema:
+        type: string
+      description: "PSU Accept-Language"
+    PsuGeoLocation:
+      name: Psu-Geo-Location
+      in: header
+      schema:
+        type: string
+      description: "PSU geo location (comma-separated latitude,longitude)"
+
+  responses:
+    BadRequest:
+      description: "Bad Request"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: "Unauthorized"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: "Forbidden"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: "Not Found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Timeout:
+      description: "Request Timeout"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: "Unprocessable Entity"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TooManyRequests:
+      description: "Too Many Requests"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: "Internal Server Error"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
 paths:
   /auth:
     post:
@@ -1589,103 +1689,3 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  parameters:
-    PsuIpAddress:
-      name: Psu-Ip-Address
-      in: header
-      schema:
-        type: string
-      description: "PSU IP address"
-    PsuUserAgent:
-      name: Psu-User-Agent
-      in: header
-      schema:
-        type: string
-      description: "PSU browser User-Agent"
-    PsuReferer:
-      name: Psu-Referer
-      in: header
-      schema:
-        type: string
-      description: "PSU Referer"
-    PsuAccept:
-      name: Psu-Accept
-      in: header
-      schema:
-        type: string
-      description: "PSU Accept header"
-    PsuAcceptCharset:
-      name: Psu-Accept-Charset
-      in: header
-      schema:
-        type: string
-      description: "PSU Accept-Charset"
-    PsuAcceptEncoding:
-      name: Psu-Accept-Encoding
-      in: header
-      schema:
-        type: string
-      description: "PSU Accept-Encoding"
-    PsuAcceptLanguage:
-      name: Psu-Accept-language
-      in: header
-      schema:
-        type: string
-      description: "PSU Accept-Language"
-    PsuGeoLocation:
-      name: Psu-Geo-Location
-      in: header
-      schema:
-        type: string
-      description: "PSU geo location (comma-separated latitude,longitude)"
-
-  responses:
-    BadRequest:
-      description: "Bad Request"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    Unauthorized:
-      description: "Unauthorized"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    Forbidden:
-      description: "Forbidden"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    NotFound:
-      description: "Not Found"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    Timeout:
-      description: "Request Timeout"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    UnprocessableEntity:
-      description: "Unprocessable Entity"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    TooManyRequests:
-      description: "Too Many Requests"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    InternalError:
-      description: "Internal Server Error"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'

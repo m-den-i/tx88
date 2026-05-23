@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 import logging
 import os
+import random
 import time
 from enum import StrEnum
-from typing import List
 from uuid import UUID
 
 logger = logging.getLogger("tx88.app")
@@ -18,13 +18,43 @@ from pydantic import BaseModel
 from transaction_converter import Transaction, TransactionStatus
 
 API_ORIGIN = "https://api.enablebanking.com"
+IPIFY_URL = "https://api.ipify.org"
 SESSIONS_DIR = os.path.join(os.path.dirname(__file__), "sessions")
+
+PSU_USER_AGENT = random.choice([
+    "Mozilla/5.0 (X11; Linux x86_64) Chrome/104.0.0.0 Gecko/20100101 Firefox/103.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+])
+
+_public_ip: str | None = None
+
+
+async def get_public_ip() -> str:
+    global _public_ip
+    if _public_ip is None:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(IPIFY_URL) as resp:
+                _public_ip = await resp.text()
+    return _public_ip
+
+
+def _psu_headers(public_ip: str) -> dict:
+    return {
+        "Psu-Ip-Address": public_ip,
+        "Psu-User-Agent": PSU_USER_AGENT,
+    }
 
 
 class ASPSP_NAME(StrEnum):
     SANTANDER = "Santander Bank Polska"
     MBANK = "mBank"
     REVOLUT = "Revolut"
+
+
+BLOCKADES_STATUS_BY_ASPSP: dict[ASPSP_NAME, TransactionStatus] = {
+    ASPSP_NAME.SANTANDER: TransactionStatus.PDNG,
+    ASPSP_NAME.MBANK: TransactionStatus.HOLD,
+}
 
 
 class ConfigModel(BaseModel):
@@ -71,8 +101,52 @@ class BankSession:
         return cls(session_id=data["session_id"])
 
 
+class SessionAccess(BaseModel):
+    valid_until: str
+    balances: bool | None = None
+    transactions: bool | None = None
+    accounts: list[str] | None = None
+
+
+class SessionAspsp(BaseModel):
+    name: str
+    country: str
+
+
+class SessionAccountData(BaseModel):
+    uid: str
+    identification_hash: str
+    identification_hashes: list[str]
+
+
 class SessionResponseModel(BaseModel):
-    accounts: List[str]
+    accounts: list[str]
+    accounts_data: list[SessionAccountData]
+    aspsp: SessionAspsp
+    access: SessionAccess
+    status: str
+    authorized: str | None = None
+    created: str
+    psu_type: str
+
+
+class AspspInfo(BaseModel):
+    name: str
+    country: str
+    beta: bool
+    logo: str
+    maximum_consent_validity: int
+    psu_types: list[str]
+    required_psu_headers: list[str] | None = None
+    bic: str | None = None
+
+
+class ApplicationInfo(BaseModel):
+    redirect_urls: list[str]
+
+
+class CompleteSessionResponse(BaseModel):
+    session_id: str
 
 
 class AccountTransactionsResponse(BaseModel):
@@ -122,18 +196,19 @@ class EnableBankingClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self.client.close()
 
-    async def list_asps(self, country: str) -> list[dict]:
+    async def list_asps(self, country: str) -> list[AspspInfo]:
         async with self.client.get(f"{API_ORIGIN}/aspsps", headers=self.headers) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
             data = await resp.json()
-        return [a for a in data["aspsps"] if a["country"] == country]
+        return [AspspInfo.model_validate(a) for a in data["aspsps"] if a["country"] == country]
 
-    async def get_application(self) -> dict:
+    async def get_application(self) -> ApplicationInfo:
         async with self.client.get(f"{API_ORIGIN}/application", headers=self.headers) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
-            return await resp.json()
+            data = await resp.json()
+        return ApplicationInfo.model_validate(data)
 
     async def start_auth(
         self,
@@ -156,17 +231,23 @@ class EnableBankingClient:
             data = await resp.json()
         return data["url"]
 
-    async def complete_session(self, auth_code: str) -> dict:
+    async def complete_session(self, auth_code: str) -> CompleteSessionResponse:
         async with self.client.post(f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=self.headers) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
-            return await resp.json()
+            data = await resp.json()
+        return CompleteSessionResponse.model_validate(data)
 
 
 class BankSessionClient(EnableBankingClient):
-    def __init__(self, settings: Settings, session_uuid: str, extra_headers: dict | None = None):
-        super().__init__(settings, extra_headers)
+    def __init__(self, settings: Settings, session_uuid: str):
+        super().__init__(settings)
         self.session_uuid = session_uuid
+
+    async def __aenter__(self):
+        await super().__aenter__()
+        self.headers.update(_psu_headers(await get_public_ip()))
+        return self
 
     async def get_session(self) -> SessionResponseModel:
         async with self.client.get(f"{API_ORIGIN}/sessions/{self.session_uuid}", headers=self.headers) as resp:
@@ -196,7 +277,7 @@ class BankSessionClient(EnableBankingClient):
         date_from: str | None = None,
         date_to: str | None = None,
     ) -> list[Transaction]:
-        params: dict = {"transaction_status": transaction_status.value}
+        params: dict = {"transaction_status": transaction_status.value} if transaction_status else {}
         if date_from:
             params["date_from"] = date_from
         if date_to:
@@ -216,6 +297,10 @@ class BankSessionClient(EnableBankingClient):
                 )
             data = await resp.json()
 
+        raw_count = len(data.get("transactions", []))
+        logger.info("EB transactions response: count=%d", raw_count)
+        if raw_count == 0:
+            logger.debug("EB transactions empty response body: %s", data)
         transactions = [Transaction.model_validate(t) for t in data.get("transactions", [])]
         return _filter_by_date(transactions, date_from, date_to)
 

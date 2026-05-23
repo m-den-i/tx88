@@ -59,6 +59,19 @@ PENDING_PAYLOAD = {
     "continuation_key": None,
 }
 
+SANTANDER_PENDING_PAYLOAD = {
+    "transactions": [
+        {
+            "transaction_amount": {"currency": "PLN", "amount": "9.99"},
+            "credit_debit_indicator": "DBIT",
+            "status": "PDNG",
+            "booking_date": "2026-04-10",
+            "entry_reference": "ref-pending-santander",
+        }
+    ],
+    "continuation_key": None,
+}
+
 
 def _setup_env(monkeypatch):
     monkeypatch.setenv("CONFIG_PATH", CONFIG_PATH)
@@ -114,8 +127,8 @@ async def test_santander_card_blockades(monkeypatch):
         for acct in ACCOUNTS:
             mocked.get(
                 f"{API}/accounts/{acct}/transactions"
-                f"?transaction_status=HOLD&date_from={date_from}&date_to={date_to}",
-                payload=PENDING_PAYLOAD,
+                f"?transaction_status=PDNG&date_from={date_from}&date_to={date_to}",
+                payload=SANTANDER_PENDING_PAYLOAD,
             )
         mocked.get(IPIFY, body="1.2.3.4")
 
@@ -134,7 +147,7 @@ async def test_santander_card_blockades(monkeypatch):
     data = resp.json()
     assert len(data["accounts"]) == len(ACCOUNTS)
     txn = data["accounts"][0]["transactions"][0]
-    assert txn["status"] == "HOLD"
+    assert txn["status"] == "PDNG"
     assert txn["transaction_amount"]["amount"] == "9.99"
 
 
