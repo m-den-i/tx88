@@ -181,6 +181,11 @@ components:
           type: string
           description: "ITAV balance amount as decimal string"
           example: "1234.56"
+        iban:
+          type: string
+          nullable: true
+          description: "Account IBAN if available"
+          example: "PL04114020040000305094656310"
 
     AccountsResponse:
       type: object

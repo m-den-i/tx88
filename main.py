@@ -6,7 +6,15 @@ from urllib.parse import parse_qs, urlparse
 
 import click
 
-from eb_client import ASPSP_NAME, EnableBankingClient, BankSessionClient, BankSession, Settings, BLOCKADES_STATUS_BY_ASPSP
+from eb_client import (
+    ASPSP_NAME,
+    EnableBankingClient,
+    BankSessionClient,
+    BankSession,
+    Settings,
+    BLOCKADES_STATUS_BY_ASPSP,
+    extract_iban,
+)
 from transaction_converter import TransactionStatus
 
 API_ORIGIN = "https://api.enablebanking.com"
@@ -48,7 +56,9 @@ async def _show_session(aspsp: ASPSP_NAME):
     async with BankSessionClient(settings, bank_session.session_id) as client:
         session = await client.get_session()
         balances = await client.get_account_balances(session)
-    click.echo(json.dumps({"session": session.model_dump(), "balances": balances}, indent=2))
+    click.echo(
+        json.dumps({"session": session.model_dump(), "balances": balances}, indent=2)
+    )
 
 
 async def _balances(aspsp: ASPSP_NAME):
@@ -56,17 +66,29 @@ async def _balances(aspsp: ASPSP_NAME):
     bank_session = BankSession.load(aspsp)
     async with BankSessionClient(settings, bank_session.session_id) as client:
         session = await client.get_session()
-        eb_accounts = await client.get_account_balances(session)
-    result = [
-        {"account_uid": acc["account_uid"], "balance": bal["balance_amount"]["amount"]}
-        for acc in eb_accounts
-        for bal in acc["balances"]["balances"]
-        if bal["balance_type"] == "ITAV"
-    ]
+        eb_accounts, details_by_uid = await asyncio.gather(
+            client.get_account_balances(session),
+            client.get_all_account_details(session),
+        )
+    result = []
+    for acc in eb_accounts:
+        uid = acc["account_uid"]
+        iban = extract_iban(details_by_uid.get(uid, {}))
+        for bal in acc["balances"]["balances"]:
+            if bal["balance_type"] == "ITAV":
+                result.append(
+                    {
+                        "account_uid": uid,
+                        "iban": iban,
+                        "balance": bal["balance_amount"]["amount"],
+                    }
+                )
     click.echo(json.dumps(result, indent=2))
 
 
-async def _transactions(aspsp: ASPSP_NAME, date_from: str | None, date_to: str | None, status: str):
+async def _transactions(
+    aspsp: ASPSP_NAME, date_from: str | None, date_to: str | None, status: str
+):
     settings = await Settings.load()
     bank_session = BankSession.load(aspsp)
     async with BankSessionClient(settings, bank_session.session_id) as client:
@@ -76,9 +98,13 @@ async def _transactions(aspsp: ASPSP_NAME, date_from: str | None, date_to: str |
             txns = await client.get_account_transactions(
                 account_uid, TransactionStatus(status), date_from, date_to
             )
-            result.append({"account_uid": account_uid, "transactions": [t.model_dump() for t in txns]})
+            result.append(
+                {
+                    "account_uid": account_uid,
+                    "transactions": [t.model_dump() for t in txns],
+                }
+            )
     click.echo(json.dumps(result, indent=2))
-
 
 
 ASPSP_CHOICES = click.Choice([a.name for a in ASPSP_NAME], case_sensitive=False)
@@ -90,7 +116,12 @@ def cli():
 
 
 @cli.command("list-asps")
-@click.option("--country", default=ASPSP_COUNTRY, show_default=True, help="Filter by country code.")
+@click.option(
+    "--country",
+    default=ASPSP_COUNTRY,
+    show_default=True,
+    help="Filter by country code.",
+)
 def list_asps(country: str):
     """List available ASPSPs."""
     asyncio.run(_list_asps(country))
@@ -119,8 +150,14 @@ def balances(aspsp: str):
 
 @cli.command("transactions")
 @click.argument("aspsp", type=ASPSP_CHOICES)
-@click.option("--date-from", default=None, help="Date to fetch from (YYYY-MM-DD). Defaults to 7 days ago.")
-@click.option("--date-to", default=None, help="Date to fetch to (YYYY-MM-DD). Defaults to today.")
+@click.option(
+    "--date-from",
+    default=None,
+    help="Date to fetch from (YYYY-MM-DD). Defaults to 7 days ago.",
+)
+@click.option(
+    "--date-to", default=None, help="Date to fetch to (YYYY-MM-DD). Defaults to today."
+)
 def transactions(aspsp: str, date_from: str | None, date_to: str | None):
     """Fetch booked transactions for an ASPSP."""
     today = date.today()
@@ -131,12 +168,22 @@ def transactions(aspsp: str, date_from: str | None, date_to: str | None):
 
 @cli.command("blockades")
 @click.argument("aspsp", type=ASPSP_CHOICES)
-@click.option("--date-from", default=None, help="Date to fetch from (YYYY-MM-DD). Defaults to 7 days ago.")
-@click.option("--date-to", default=None, help="Date to fetch to (YYYY-MM-DD). Defaults to today.")
+@click.option(
+    "--date-from",
+    default=None,
+    help="Date to fetch from (YYYY-MM-DD). Defaults to 7 days ago.",
+)
+@click.option(
+    "--date-to", default=None, help="Date to fetch to (YYYY-MM-DD). Defaults to today."
+)
 def blockades(aspsp: str, date_from: str | None, date_to: str | None):
     """Fetch card blockades (pending holds) for an ASPSP."""
     aspsp_enum = ASPSP_NAME[aspsp.upper()]
-    asyncio.run(_transactions(aspsp_enum, None, None, BLOCKADES_STATUS_BY_ASPSP[aspsp_enum].value))
+    asyncio.run(
+        _transactions(
+            aspsp_enum, None, None, BLOCKADES_STATUS_BY_ASPSP[aspsp_enum].value
+        )
+    )
 
 
 if __name__ == "__main__":

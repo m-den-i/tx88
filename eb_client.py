@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -21,10 +22,12 @@ API_ORIGIN = "https://api.enablebanking.com"
 IPIFY_URL = "https://api.ipify.org"
 SESSIONS_DIR = os.path.join(os.path.dirname(__file__), "sessions")
 
-PSU_USER_AGENT = random.choice([
-    "Mozilla/5.0 (X11; Linux x86_64) Chrome/104.0.0.0 Gecko/20100101 Firefox/103.0",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
-])
+PSU_USER_AGENT = random.choice(
+    [
+        "Mozilla/5.0 (X11; Linux x86_64) Chrome/104.0.0.0 Gecko/20100101 Firefox/103.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+    ]
+)
 
 _public_ip: str | None = None
 
@@ -46,7 +49,7 @@ def _psu_headers(public_ip: str) -> dict:
 
 
 class ASPSP_NAME(StrEnum):
-    SANTANDER = "Santander Bank Polska"
+    SANTANDER = "Erste Bank Polska"
     MBANK = "mBank"
     REVOLUT = "Revolut"
 
@@ -154,6 +157,16 @@ class AccountTransactionsResponse(BaseModel):
     transactions: list[Transaction]
 
 
+def extract_iban(details: dict) -> str | None:
+    account_id = details.get("account_id") or {}
+    if account_id.get("iban"):
+        return account_id["iban"]
+    for aid in details.get("all_account_ids") or []:
+        if aid.get("scheme_name") == "IBAN":
+            return aid.get("identification")
+    return None
+
+
 def _filter_by_date(
     transactions: list[Transaction],
     date_from: str | None,
@@ -177,8 +190,18 @@ def _filter_by_date(
 
 def build_jwt_token(settings: Settings) -> str:
     iat = int(time.time())
-    jwt_body = {"iss": "enablebanking.com", "aud": "api.enablebanking.com", "iat": iat, "exp": iat + 600}
-    jwt_token = pyjwt.encode(jwt_body, settings.app_private_key, algorithm="RS256", headers={"kid": settings.application_id})
+    jwt_body = {
+        "iss": "enablebanking.com",
+        "aud": "api.enablebanking.com",
+        "iat": iat,
+        "exp": iat + 600,
+    }
+    jwt_token = pyjwt.encode(
+        jwt_body,
+        settings.app_private_key,
+        algorithm="RS256",
+        headers={"kid": settings.application_id},
+    )
     if isinstance(jwt_token, bytes):
         jwt_token = jwt_token.decode()
     return jwt_token
@@ -187,7 +210,10 @@ def build_jwt_token(settings: Settings) -> str:
 class EnableBankingClient:
     def __init__(self, settings: Settings, extra_headers: dict | None = None):
         self.settings = settings
-        self.headers = {"Authorization": f"Bearer {build_jwt_token(settings)}", **(extra_headers or {})}
+        self.headers = {
+            "Authorization": f"Bearer {build_jwt_token(settings)}",
+            **(extra_headers or {}),
+        }
 
     async def __aenter__(self):
         self.client = aiohttp.ClientSession()
@@ -197,14 +223,22 @@ class EnableBankingClient:
         return await self.client.close()
 
     async def list_asps(self, country: str) -> list[AspspInfo]:
-        async with self.client.get(f"{API_ORIGIN}/aspsps", headers=self.headers) as resp:
+        async with self.client.get(
+            f"{API_ORIGIN}/aspsps", headers=self.headers
+        ) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
             data = await resp.json()
-        return [AspspInfo.model_validate(a) for a in data["aspsps"] if a["country"] == country]
+        return [
+            AspspInfo.model_validate(a)
+            for a in data["aspsps"]
+            if a["country"] == country
+        ]
 
     async def get_application(self) -> ApplicationInfo:
-        async with self.client.get(f"{API_ORIGIN}/application", headers=self.headers) as resp:
+        async with self.client.get(
+            f"{API_ORIGIN}/application", headers=self.headers
+        ) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
             data = await resp.json()
@@ -225,14 +259,18 @@ class EnableBankingClient:
             "redirect_url": redirect_url,
             "psu_type": "personal",
         }
-        async with self.client.post(f"{API_ORIGIN}/auth", json=body, headers=self.headers) as resp:
+        async with self.client.post(
+            f"{API_ORIGIN}/auth", json=body, headers=self.headers
+        ) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
             data = await resp.json()
         return data["url"]
 
     async def complete_session(self, auth_code: str) -> CompleteSessionResponse:
-        async with self.client.post(f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=self.headers) as resp:
+        async with self.client.post(
+            f"{API_ORIGIN}/sessions", json={"code": auth_code}, headers=self.headers
+        ) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"API error {resp.status}: {await resp.text()}")
             data = await resp.json()
@@ -250,25 +288,64 @@ class BankSessionClient(EnableBankingClient):
         return self
 
     async def get_session(self) -> SessionResponseModel:
-        async with self.client.get(f"{API_ORIGIN}/sessions/{self.session_uuid}", headers=self.headers) as resp:
+        async with self.client.get(
+            f"{API_ORIGIN}/sessions/{self.session_uuid}", headers=self.headers
+        ) as resp:
             if resp.status != 200:
                 text = await resp.text()
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                    detail={"error": "external_api_error", "status": resp.status, "text": text})
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "error": "external_api_error",
+                        "status": resp.status,
+                        "text": text,
+                    },
+                )
             data = await resp.json()
         return SessionResponseModel.model_validate(data)
 
     async def get_account_balances(self, session_parsed: SessionResponseModel):
         results = []
         for account_uid in session_parsed.accounts:
-            async with self.client.get(f"{API_ORIGIN}/accounts/{account_uid}/balances", headers=self.headers) as resp:
+            async with self.client.get(
+                f"{API_ORIGIN}/accounts/{account_uid}/balances", headers=self.headers
+            ) as resp:
                 if resp.status != 200:
                     text = await resp.text()
-                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                        detail={"error": "external_api_error", "status": resp.status, "text": text})
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail={
+                            "error": "external_api_error",
+                            "status": resp.status,
+                            "text": text,
+                        },
+                    )
                 bal = await resp.json()
             results.append({"account_uid": account_uid, "balances": bal})
         return results
+
+    async def get_account_details(self, account_uid: str) -> dict:
+        async with self.client.get(
+            f"{API_ORIGIN}/accounts/{account_uid}/details", headers=self.headers
+        ) as resp:
+            if resp.status != 200:
+                text = await resp.text()
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "error": "external_api_error",
+                        "status": resp.status,
+                        "text": text,
+                    },
+                )
+            return await resp.json()
+
+    async def get_all_account_details(
+        self, session_parsed: SessionResponseModel
+    ) -> dict[str, dict]:
+        tasks = [self.get_account_details(uid) for uid in session_parsed.accounts]
+        results = await asyncio.gather(*tasks)
+        return dict(zip(session_parsed.accounts, results))
 
     async def get_account_transactions(
         self,
@@ -277,7 +354,11 @@ class BankSessionClient(EnableBankingClient):
         date_from: str | None = None,
         date_to: str | None = None,
     ) -> list[Transaction]:
-        params: dict = {"transaction_status": transaction_status.value} if transaction_status else {}
+        params: dict = (
+            {"transaction_status": transaction_status.value}
+            if transaction_status
+            else {}
+        )
         if date_from:
             params["date_from"] = date_from
         if date_to:
@@ -293,7 +374,11 @@ class BankSessionClient(EnableBankingClient):
                 text = await resp.text()
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail={"error": "external_api_error", "status": resp.status, "text": text},
+                    detail={
+                        "error": "external_api_error",
+                        "status": resp.status,
+                        "text": text,
+                    },
                 )
             data = await resp.json()
 
@@ -301,7 +386,9 @@ class BankSessionClient(EnableBankingClient):
         logger.info("EB transactions response: count=%d", raw_count)
         if raw_count == 0:
             logger.debug("EB transactions empty response body: %s", data)
-        transactions = [Transaction.model_validate(t) for t in data.get("transactions", [])]
+        transactions = [
+            Transaction.model_validate(t) for t in data.get("transactions", [])
+        ]
         return _filter_by_date(transactions, date_from, date_to)
 
     async def get_all_transactions(
@@ -313,6 +400,12 @@ class BankSessionClient(EnableBankingClient):
     ) -> list[AccountTransactionsResponse]:
         results = []
         for account_uid in session_parsed.accounts:
-            txns = await self.get_account_transactions(account_uid, transaction_status, date_from, date_to)
-            results.append(AccountTransactionsResponse(account_uid=UUID(account_uid), transactions=txns))
+            txns = await self.get_account_transactions(
+                account_uid, transaction_status, date_from, date_to
+            )
+            results.append(
+                AccountTransactionsResponse(
+                    account_uid=UUID(account_uid), transactions=txns
+                )
+            )
         return results

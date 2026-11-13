@@ -42,7 +42,7 @@ Session UUIDs are read at startup from `sessions/<ASPSP_NAME.name.lower()>.json`
 
 ## Architecture
 
-**API client**: `EnableBankingClient` handles management endpoints (`list_asps`, `get_application`, `start_auth`, `complete_session`). `BankSessionClient(EnableBankingClient)` adds session-bound endpoints (`get_session`, `get_account_balances`, `get_account_transactions`, `get_all_transactions`). Both are async context managers wrapping `aiohttp.ClientSession`. JWT tokens are minted per-instance in `build_jwt_token()` — RSA-signed, 600 s TTL.
+**API client**: `EnableBankingClient` handles management endpoints (`list_asps`, `get_application`, `start_auth`, `complete_session`). `BankSessionClient(EnableBankingClient)` adds session-bound endpoints (`get_session`, `get_account_balances`, `get_account_details`, `get_all_account_details`, `get_account_transactions`, `get_all_transactions`). Both are async context managers wrapping `aiohttp.ClientSession`. JWT tokens are minted per-instance in `build_jwt_token()` — RSA-signed, 600 s TTL.
 
 **Lifespan**: `settings: Settings`, `bank_sessions: dict[ASPSP_NAME, BankSession]`, and `public_ip: str` are module-level globals populated at startup via `@asynccontextmanager lifespan`.
 
