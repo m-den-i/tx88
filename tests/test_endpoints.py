@@ -97,6 +97,10 @@ async def test_mbank_balance(monkeypatch):
         mocked.get(f"{API}/sessions/{MBANK_UUID}", payload=SESSION_DATA)
         for acct in ACCOUNTS:
             mocked.get(f"{API}/accounts/{acct}/balances", payload=BALANCES_DATA)
+            mocked.get(
+                f"{API}/accounts/{acct}/details",
+                payload={"account_id": {"iban": f"PL{acct[:8]}"}},
+            )
         mocked.get(IPIFY, body="1.2.3.4")
 
         ctx = srv.lifespan(srv.app)
@@ -113,6 +117,7 @@ async def test_mbank_balance(monkeypatch):
     expected_balance = BALANCES_DATA["balances"][1]["balance_amount"]["amount"]
     for account in data["accounts"]:
         assert account["balance"] == expected_balance
+        assert account["iban"] == f"PL{account['uuid'][:8]}"
 
 
 @pytest.mark.asyncio

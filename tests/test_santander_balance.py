@@ -45,6 +45,10 @@ async def test_santander_balance_handler(monkeypatch):
         accounts = session_data["accounts"]
         for acct in accounts:
             mocked.get(f"https://api.enablebanking.com/accounts/{acct}/balances", payload=balances_data)
+            mocked.get(
+                f"https://api.enablebanking.com/accounts/{acct}/details",
+                payload={"account_id": {"iban": f"PL{acct[:8]}"}},
+            )
 
         importlib.reload(server)
 
@@ -57,6 +61,8 @@ async def test_santander_balance_handler(monkeypatch):
             assert resp.status_code == 200
             data = resp.json()
             assert data["accounts"][0]["balance"] == balances_data["balances"][1]["balance_amount"]["amount"]
+            assert data["accounts"][0]["iban"] == f"PL{accounts[0][:8]}"
             assert data["accounts"][1]["balance"] == balances_data["balances"][1]["balance_amount"]["amount"]
+            assert data["accounts"][1]["iban"] == f"PL{accounts[1][:8]}"
 
         await ctx.__aexit__(None, None, None)
